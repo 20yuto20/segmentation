@@ -20,6 +20,8 @@ import time
 
 print("hello")
 print("sub")
+print("sub2")
+
 
 use_cuda = torch.cuda.is_available()
 print('Use CUDA:', use_cuda)
