@@ -19,6 +19,7 @@ import tqdm
 import time
 
 print("hello")
+print("sub")
 
 use_cuda = torch.cuda.is_available()
 print('Use CUDA:', use_cuda)
