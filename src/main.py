@@ -18,6 +18,7 @@ import cv2
 import tqdm
 import time
 
+print("hello")
 
 use_cuda = torch.cuda.is_available()
 print('Use CUDA:', use_cuda)
