@@ -1,16 +1,29 @@
+import os
+from PIL import Image, ImageOps, ImageFilter
+
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+
+from augment import RandomCrop, Normalize, ToTensor
+
+
+
+
 def is_image(filename):
     return any(filename.endswith(ext) for ext in '.png')
 
 def is_label(filename):
-    return filename.endswith("_s.png")
+    # return filename.endswith("_s.png")
+    return filename.endswith(".png")
 
 def image_basename(filename):
     return os.path.basename(os.path.splitext(filename)[0])
 
 class MYDataset(Dataset):
     
+    # split : phase
     def __init__(self, split, transform):
-        self._base_dir = './ARCdataset_png/'
+        self._base_dir = '/homes/ypark/code/dataset/CitySpaces/'
         
         self.split = split
         self.images_root = os.path.join(self._base_dir, split, 'rgb/')
@@ -19,9 +32,9 @@ class MYDataset(Dataset):
         self.filenames = [image_basename(f)
             for f in os.listdir(self.images_root) if is_image(f)]
         self.filenames.sort()
-
         self.filenamesGt = [image_basename(f)
             for f in os.listdir(self.labels_root) if is_label(f)]
+        
         self.filenamesGt.sort()
 
         self.transform = transform
@@ -65,5 +78,7 @@ def get_dataloader():
     batch_size = 5
     train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=1, shuffle=True,pin_memory=True)
     val_loader = DataLoader(val_dataset, batch_size=1, num_workers=0, shuffle=False,pin_memory=True)
+
+    return train_loader, val_loader
 
 

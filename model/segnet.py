@@ -1,3 +1,11 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+
+
+
 class SegNet(nn.Module):
     def __init__(self, input_channels, output_channels):
         super(SegNet, self).__init__()
@@ -28,7 +36,7 @@ class SegNet(nn.Module):
                                             nn.BatchNorm2d(256),
                                             nn.ReLU(inplace=True))
 
-         self.encoder_3 = nn.Sequential(nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, padding=1),
+        self.encoder_3 = nn.Sequential(nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, padding=1),
                                             nn.BatchNorm2d(512),
                                             nn.ReLU(inplace=True),
                                             nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1),
@@ -50,7 +58,7 @@ class SegNet(nn.Module):
 
         # Decoder layers
 
-         self.decoder_4 = nn.Sequential(nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1),
+        self.decoder_4 = nn.Sequential(nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1),
                                             nn.BatchNorm2d(512),
                                             nn.ReLU(inplace=True),
                                             nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1),

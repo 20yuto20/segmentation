@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Evaluator(object):
     def __init__(self, num_class):
         

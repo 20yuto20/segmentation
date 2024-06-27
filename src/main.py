@@ -13,15 +13,16 @@ import glob
 import numbers
 import random
 import matplotlib.pyplot as plt
-import torchsummary
-import cv2
+# import torchsummary
 import tqdm
 import time
 
-print("hello")
-print("sub")
-print("sub2")
+from model.segnet import SegNet
+from evalator import Evaluator
+from dataloader import get_dataloader
 
+
+batch_size = 5
 
 use_cuda = torch.cuda.is_available()
 print('Use CUDA:', use_cuda)
@@ -41,8 +42,10 @@ criterion = nn.CrossEntropyLoss(reduction='mean')
 if use_cuda:
     criterion.cuda()
 
+train_loader, val_loader = get_dataloader()
+
 #モデルの情報を表示
-torchsummary.summary(model,(3,128,128))
+# torchsummary.summary(model,(3,128,128))
 
 # 学習済みモデルを呼び出す
 
@@ -97,5 +100,5 @@ for epoch in range(1, epoch_num+1):
     #loss_history.append(sum_loss)
     mIoU = evaluator.Mean_Intersection_over_Union()
     Acc = evaluator.Pixel_Accuracy()
-    print("epoch: {}, mean loss: {}, mean accuracy: {}，　mean IoU: {}".format(epoch, sum_loss/(len(train_loader)*batch_size), Acc, mIoU))
+    print("epoch: {}, mean loss: {}, mean accuracy: {}, mean IoU: {}".format(epoch, sum_loss/(len(train_loader)*batch_size), Acc, mIoU))
 
