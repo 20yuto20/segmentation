@@ -17,6 +17,11 @@ import matplotlib.pyplot as plt
 import tqdm
 import time
 
+# Add the parent dir to the sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
 from model.segnet import SegNet
 from evalator import Evaluator
 from dataloader import get_dataloader

@@ -23,7 +23,12 @@ class MYDataset(Dataset):
     
     # split : phase
     def __init__(self, split, transform):
-        self._base_dir = '/homes/ypark/code/dataset/CitySpaces/'
+
+        # detect the dir dynamically
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+
+        self._base_dir = os.path.join(parent_dir, 'dataset', 'CitySpaces')
         
         self.split = split
         self.images_root = os.path.join(self._base_dir, split, 'rgb/')
