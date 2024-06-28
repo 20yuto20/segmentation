@@ -1,0 +1,92 @@
+default:
+  seed: 1
+  output_dir: "output"
+  home_dir: "/home/park/code/rand/"
+  dataset_dir: "/home/park/code/rand/dataset/"
+  deterministic: False
+  parallel: False
+  device_id: 0
+  num_workers: null
+  make_dir: True
+
+
+network:
+  model: "cifar_resnet"
+  cifar_resnet:
+    n_layers: 20
+  wide_resnet:
+    n_blocks1: 4
+    n_blocks2: 4
+    n_blocks3: 4
+    width_coef1: 10
+    width_coef2: 10
+    width_coef3: 10
+    dropout_rate1: 0.3
+    dropout_rate2: 0.3
+    dropout_rate3: 0.3
+
+
+learn:
+  n_epoch: 300
+  batch_size: 128
+  pretrained: "nontrained"
+  
+augment: 
+  name: 
+    - "base"
+  hp:
+    mix_p: 1.0
+    cutout_p: 1.0
+    cutout_size: 0.5
+    patchg_p: 1.0
+    patchg_size: 18
+    patchg_s: 0.5
+
+  rand:
+    weight: "None"
+    single: "None"
+    num_op: 2
+    magnitude:  9
+    random_magnitude: True
+    scheduled: False
+    init_t: 0.0005
+    fin_t: 1.0
+    softmax_t: 0.5
+    peak: False
+    affinity: False
+    save_all_affinity: False
+
+  dynamic: True
+  
+
+dataset:
+  name: "cifar10"
+  n_class: 10
+  img_size: 32
+  resized_size: 32
+  train_size: None
+  
+
+optimizer:
+  name: SGD
+  scheduler:
+    name: cosine
+    step:
+      - 60
+      - 120
+      - 160
+    
+  hp:
+    lr: 0.1
+    lr_min: 0.0001
+    lr_init_reduction: 1.0
+    warmup_period: 20
+    warmup_init: 1e-5
+    momentum: 0.95
+    weight_decay: 5e-4
+    
+
+save:
+  img: True
+  plot: True
+  selected: True
