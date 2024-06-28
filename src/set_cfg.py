@@ -11,11 +11,11 @@ def setup_config():
     print(args)
     if len(args) > 1:
         config_file_name = args[1]
-        config_file_path = f"/home/park/code/rand/src/conf/{config_file_name}.yaml"
+        config_file_path = f"/home/park/code/rand/src/conf/{config_file_name}.yaml" # TODO: getting path dynamically
     else:
         print("aa")
         config_file_name = "test"
-        config_file_path = "/home/park/code/segmentation/src/conf/test.yaml"
+        config_file_path = "/home/park/code/segmentation/src/conf/test.yaml" # TODO: getting path dynamically
     if os.path.exists(config_file_path):
         cfg = OmegaConf.load(config_file_path)
     else:

@@ -1,8 +1,8 @@
 default:
   seed: 1
   output_dir: "output"
-  home_dir: "/home/park/code/rand/"
-  dataset_dir: "/home/park/code/rand/dataset/"
+  home_dir: "/home/park/code/rand/" # TODO: getting path dynamically
+  dataset_dir: "/home/park/code/rand/dataset/" # TODO: getting path dynamically
   deterministic: False
   parallel: False
   device_id: 0
@@ -11,7 +11,7 @@ default:
 
 
 network:
-  model: "cifar_resnet"
+  model: "cifar_resnet" # TODO: change into segnet
   cifar_resnet:
     n_layers: 20
   wide_resnet:
@@ -60,7 +60,7 @@ augment:
   
 
 dataset:
-  name: "cifar10"
+  name: "cifar10" # TODO: change into City
   n_class: 10
   img_size: 32
   resized_size: 32
