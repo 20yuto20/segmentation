@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 from omegaconf import OmegaConf
 import datetime
@@ -9,13 +10,17 @@ import datetime
 def setup_config():
     args = sys.argv
     print(args)
+
+    current_dir = Path(__file__).resolve().parent
+    conf_dir = current_dir / "conf"
+
     if len(args) > 1:
         config_file_name = args[1]
-        config_file_path = f"/home/park/code/rand/src/conf/{config_file_name}.yaml" # TODO: getting path dynamically
+        config_file_path = conf_dir / f"{config_file_name}.yaml"
     else:
         print("aa")
         config_file_name = "test"
-        config_file_path = "/home/park/code/segmentation/src/conf/test.yaml" # TODO: getting path dynamically
+        config_file_path = conf_dir / "test.yaml"
     if os.path.exists(config_file_path):
         cfg = OmegaConf.load(config_file_path)
     else:

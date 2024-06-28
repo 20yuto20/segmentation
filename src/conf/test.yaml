@@ -1,30 +1,19 @@
 default:
   seed: 1
   output_dir: "output"
-  home_dir: "/home/park/code/rand/" # TODO: getting path dynamically
-  dataset_dir: "/home/park/code/rand/dataset/" # TODO: getting path dynamically
+  home_dir: "../"
+  dataset_dir: "../dataset"
   deterministic: False
   parallel: False
   device_id: 0
   num_workers: null
   make_dir: True
 
-
 network:
-  model: "cifar_resnet" # TODO: change into segnet
-  cifar_resnet:
-    n_layers: 20
-  wide_resnet:
-    n_blocks1: 4
-    n_blocks2: 4
-    n_blocks3: 4
-    width_coef1: 10
-    width_coef2: 10
-    width_coef3: 10
-    dropout_rate1: 0.3
-    dropout_rate2: 0.3
-    dropout_rate3: 0.3
-
+  model: "segnet"
+  segnet:
+    input_channels: 3
+    output_channels: 19  # Assuming CityScapes dataset with 19 classes
 
 learn:
   n_epoch: 300
@@ -58,14 +47,12 @@ augment:
 
   dynamic: True
   
-
 dataset:
-  name: "cifar10" # TODO: change into City
-  n_class: 10
-  img_size: 32
-  resized_size: 32
-  train_size: None
-  
+  name: "CityScapes"
+  n_class: 19
+  img_size: 256  # Adjust based on your CityScapes dataset
+  resized_size: 256
+  train_size: null
 
 optimizer:
   name: SGD
@@ -85,7 +72,6 @@ optimizer:
     momentum: 0.95
     weight_decay: 5e-4
     
-
 save:
   img: True
   plot: True
