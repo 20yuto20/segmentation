@@ -1,70 +1,69 @@
 default:
+  env: "cotton"
   seed: 1
   output_dir: "output"
-  home_dir: "/home/park/code/rand/"
-  dataset_dir: "/home/park/code/rand/dataset/"
+  home_dir: null
+  dataset_dir: null
   deterministic: False
   parallel: False
   device_id: 0
-  num_workers: null
+  num_workers: 8
+  num_excute: 4
   make_dir: True
+  add_filename: null
 
 
 network:
-  model: "cifar_resnet"
-  cifar_resnet:
-    n_layers: 20
-  wide_resnet:
-    n_blocks1: 4
-    n_blocks2: 4
-    n_blocks3: 4
-    width_coef1: 10
-    width_coef2: 10
-    width_coef3: 10
-    dropout_rate1: 0.3
-    dropout_rate2: 0.3
-    dropout_rate3: 0.3
+  name: "segnet"
+  pretrained: False
+  dropout_rate: 0.3
 
 
 learn:
-  n_epoch: 300
-  batch_size: 128
-  pretrained: "nontrained"
-  
+  n_epoch: 10
+  batch_size: 5
+
+
 augment: 
   name: 
-    - "base"
+   - "base"
   hp:
-    mix_p: 1.0
-    cutout_p: 1.0
+    rcrop_pad: 4
+    cutout_p: 0.5
     cutout_size: 0.5
-    patchg_p: 1.0
-    patchg_size: 18
-    patchg_s: 0.5
-
-  rand:
-    weight: "None"
-    single: "None"
+    ra_p: 1.0
+    
+  ra:
+    space: "ra"
+    weight: null
+    single: null
     num_op: 2
-    magnitude:  9
+    magnitude:  14
     random_magnitude: True
-    scheduled: False
-    init_t: 0.0005
-    fin_t: 1.0
     softmax_t: 0.5
-    peak: False
-    affinity: False
-    save_all_affinity: False
+    affinity_path: null
+    fix_iden: True
+    init_epoch: 20
+    warmup_ra: False
+    aff_calc: False
+    aff_model: null
 
-  dynamic: True
   
 
 dataset:
-  name: "cifar10"
-  n_class: 10
-  img_size: 32
-  resized_size: 32
-  train_size: None
+  name: "CitySpace"
+  n_class: 41
+  img_size: 128
+  resized_size: 128
+  train_size: null
+  mean: 
+    - 0.485
+    - 0.456
+    - 0.406
+  std: 
+    - 0.229
+    - 0.224
+    - 0.225
   
 
 optimizer:
@@ -79,10 +78,9 @@ optimizer:
   hp:
     lr: 0.1
     lr_min: 0.0001
-    lr_init_reduction: 1.0
-    warmup_period: 20
+    warmup_period: null
     warmup_init: 1e-5
-    momentum: 0.95
+    momentum: 0.9
     weight_decay: 5e-4
     
 
@@ -90,3 +88,13 @@ save:
   img: True
   plot: True
   selected: True
+  affinity: False
+  affinity_all: False
+  interval: null
+
+
+
+
+
+
+

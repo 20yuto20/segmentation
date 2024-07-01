@@ -7,19 +7,31 @@ import datetime
 
 
 def setup_config():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    # parent_dir : ['/homes/ypark/code/segmentation/']
+
     args = sys.argv
-    print(args)
+    # configファイル名にargsで指定がある場合
     if len(args) > 1:
         config_file_name = args[1]
-        config_file_path = f"/home/park/code/rand/src/conf/{config_file_name}.yaml"
+
+    # config nameがargsで指定がない場合，defaultでtest.yamlを使用
     else:
-        print("aa")
         config_file_name = "test"
-        config_file_path = "/home/park/code/segmentation/src/conf/test.yaml"
+    config_file_path = current_dir + f"/conf/{config_file_name}.yaml"
     if os.path.exists(config_file_path):
         cfg = OmegaConf.load(config_file_path)
     else:
         raise "No YAML file !!!"
+    
+    # 実行のhome dirを設定
+    if cfg.default.home_dir is None:
+        cfg.default.home_dir = f"{parent_dir}/"
+    # dataset dirを設定
+    if cfg.default.dataset_dir is None:
+        cfg.default.dataset_dir = os.path.join(parent_dir, "dataset")
+    
 
     # コマンドラインで受け取った引数とconfig_fileの情報をmerge
     cfg = OmegaConf.merge(cfg, OmegaConf.from_cli(args_list=args[2:]))
@@ -83,44 +95,50 @@ def override_original_config(cfg):
     print("### Override config.")
 
 
+# 実行中の結果を保存するdir nameの決定
+# 命名則 : 基本的には適用したaug name，RA関連だけ区別できるように詳しい設定
+# cfg.default.add_filenameでdir nameを追加することができる
 def get_filename(cfg):
-    if "my" in cfg.augment.name or "my_rand" in cfg.augment.name or cfg.optimizer.scheduler.name == "warmup":
-        file_name = f"warmup{cfg.optimizer.hp.warmup_period}_"
+    if cfg.default.add_filename is not None:
+        file_name = cfg.default.add_filename
     else:
-        file_name = f"{cfg.optimizer.scheduler.name}_"
-    if cfg.augment.dynamic:
-        file_name = f"{file_name}Dynamic_"
+        file_name = ""
+    
     
     for aug_name in cfg.augment.name:
         print(aug_name)
-        if aug_name == "rand":
-            file_name = f"{file_name}Rand{cfg.augment.rand.num_op}"
-            if cfg.augment.rand.weight == "random":
+        if aug_name == "ra":
+            file_name = f"{file_name}RA{cfg.augment.ra.num_op}"
+            if cfg.augment.ra.weight == "random":
                 file_name = f"{file_name}_Random"
-            elif cfg.augment.rand.weight == "single":
-                file_name = f"{file_name}_{cfg.augment.rand.single}"
-            elif cfg.augment.rand.weight == "affinity":
-                if cfg.augment.rand.scheduler:
-                    file_name = f"{file_name}_Affinity{cfg.augment.rand.softmax_t}_{cfg.augment.rand.scheduler}Scheduled"
-                else:
-                    file_name = f"{file_name}_Affinity{cfg.augment.rand.softmax_t}_Fixed"
+            elif cfg.augment.ra.weight == "single":
+                file_name = f"{file_name}_{cfg.augment.ra.single}"
+            elif cfg.augment.ra.weight == "affinity":
+                file_name = f"{file_name}_Affinity{cfg.augment.ra.softmax_t}"
             else:
-                raise ValueError(f"Invalid RandAugment weight type... {cfg.augment.rand.weight}")
+                raise ValueError(f"Invalid RandAugment weight type... {cfg.augment.ra.weight}")
             
-        elif aug_name == "my":
-            if cfg.augment.rand.scheduler:
-                    file_name = f"{file_name}_My{cfg.augment.rand.softmax_t}_{cfg.augment.rand.scheduler}Scheduled"
-            else:
-                file_name = f"{file_name}_My{cfg.augment.rand.softmax_t}_Fixed"
+            if cfg.augment.ra.random_magnitude:
+                file_name = f"{file_name}_Randmag"
 
-        elif aug_name == "my_rand":
-            file_name = f"{file_name}_MyRand"
+            
+        elif aug_name == "single":
+            file_name = f"{file_name}SinglePass{cfg.augment.ra.softmax_t}_{cfg.augment.ra.init_epoch}"
+            if cfg.augment.ra.random_magnitude:
+                file_name = f"{file_name}_Randmag"
+
+        elif aug_name == "w_ra":
+            file_name = f"{file_name}WarmupRA{cfg.augment.ra.init_epoch}"
+            if cfg.augment.ra.random_magnitude:
+                file_name = f"{file_name}_Randmag"
         
         else:
-            file_name = f"{file_name}_{aug_name.capitalize()}"
-        
+            file_name = f"{file_name}{aug_name.capitalize()}"
+
         
     return file_name
+
+
 
 
 
