@@ -4,7 +4,7 @@ from PIL import Image, ImageOps, ImageFilter
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 
-from augment import RandomCrop, Normalize, ToTensor
+from augment import RandomCrop, Normalize, ToTensor, Resize
 
 
 
@@ -64,13 +64,16 @@ class MYDataset(Dataset):
 
 def get_dataloader():
     # データ拡張を設定
-    transform = transforms.Compose([                          
-        RandomCrop((320,320)), 
+    # TODO: These image sizes shoulf be managed by YAML
+    transform = transforms.Compose([                  
+        Resize((128,128)),        
+        RandomCrop((128,128)), 
         Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         ToTensor(),
     ])
 
     test_transform = transforms.Compose([
+        Resize((128,128)),
         Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         ToTensor(),
     ])

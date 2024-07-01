@@ -38,12 +38,13 @@ def main(cfg):
     device = setup_device(cfg)
     fixed_r_seed(cfg)
 
-
+    # TODO: managed by YAML
     batch_size = 5
 
     use_cuda = torch.cuda.is_available()
     print('Use CUDA:', use_cuda)
 
+    # TODO: managed by YAML
     num_class = 41
     model = SegNet(input_channels=3, output_channels=num_class)
     model.to(device)
@@ -51,6 +52,7 @@ def main(cfg):
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
 
     #エポック数の設定
+    # TODO: managed by YAML
     epoch_num = 400
 
     # 誤差関数の設定

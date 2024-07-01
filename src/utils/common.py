@@ -3,7 +3,7 @@ import numpy as np
 
 import torch
 
-
+# TODO: add the func referencing /share/src/utils/common.py
 def setup_device(cfg):
     if torch.cuda.is_available():
         device = torch.device(f"cuda:{cfg.default.device_id}")
