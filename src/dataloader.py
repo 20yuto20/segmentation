@@ -31,7 +31,7 @@ class MYDataset(Dataset):
         # current_dir = os.path.dirname(os.path.abspath(__file__))
         # parent_dir = os.path.dirname(current_dir)
 
-        # self._base_dir = os.path.join(parent_dir, 'dataset', 'CitySpaces')
+        # self._base_dir = os.path.join(parent_dir, 'dataset', 'CityScapes')
 
         self_base_dir = root
         

@@ -38,4 +38,4 @@ def delete_corresponding_files(root, file_number):
                     os.remove(file_to_delete)
                     print(f"削除したファイル: {file_to_delete}")
 
-check_and_delete_images('/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/CitySpaces')
+check_and_delete_images('/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/CityScapes')

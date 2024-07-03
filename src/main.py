@@ -4,12 +4,13 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 # import torchsummary
+import torch
 import tqdm
 import time
 import pandas as pd
 
 
-from set_cfg import setup_config
+from set_cfg import setup_config, add_config
 from model.segnet import SegNet
 from evalator import Evaluator
 from dataloader import get_dataloader
@@ -18,8 +19,8 @@ from utils.common import (
     setup_device,
     fixed_r_seed,
     get_time,
-    plot_log
-    
+    plot_log,
+    save_learner  
 )
 from utils.suggest import (
     suggest_network,
@@ -61,6 +62,8 @@ def main(cfg):
     # 学習の実行
     all_training_result = []
     start_time = time.time()
+    best_miou = 0.0
+
     for epoch in range(1, cfg.learn.n_epoch+1):
         evaluator.reset()
         # tqdmを使用して学習の進捗を表示
@@ -80,11 +83,12 @@ def main(cfg):
         print(f"Epoch: {epoch}, Loss: {loss:.4f}, Accuracy: {Acc:.4f}, mIoU: {mIoU:.4f}")
         print("-" * 80)
 
-        # 最良のval制度の時にモデル重みを保存
-        # if best_acc < val_acc:
-        #     best_acc = val_acc
-        #     save_learner(cfg, model, device, True)
-
+        # 最良のval mIoUの時にモデル重みを保存
+        if mIoU > best_miou:
+            best_miou = mIoU
+            print(f"New best mIoU: {best_miou}. Saving model...")
+            save_learner(cfg, model, device, True)
+            
         scheduler.step()
 
 
@@ -92,17 +96,26 @@ def main(cfg):
     total_training_time = get_time(end_time - start_time) # dict型
     print(f"Total training {total_training_time}")
 
-    # testの実行
-    # test()
+    # Load the best model
+    best_model_path = cfg.out_dir + "weights/best.pth"
+    model.load_state_dict(torch.load(best_model_path))
+
+    # Run test
+    test_mIoU, test_Acc = test(cfg, device, model, test_loader, criterion, evaluator)
+    print(f"Final Test Results - Test Accuracy: {test_Acc:.4f}, Test mIoU: {test_mIoU:.4f}")
+    all_training_result.append([test_mIoU, test_Acc])
 
     # 学習結果をdfに，csvファイルに保存
     all_training_result = pd.DataFrame(
         np.array(all_training_result),
-        columns=["train_loss", "val_mIoU", "val_acc"],
+        columns=["train_loss", "val_mIoU", "val_acc", "test_mIoU", "test_Acc"],
     )
     save_file_path = cfg.out_dir + "output.csv"
     all_training_result.to_csv(save_file_path, index=False)
 
+    # TODO: add_configの使い方がこれであっているか確認
+    add_config(cfg, {"test_acc" : test_Acc})
+    add_config(cfg, total_training_time)
     plot_log(cfg, all_training_result)
 
 

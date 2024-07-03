@@ -50,19 +50,19 @@ augment:
 
   
 dataset:
-  name: "CitySpace"
+  name: "CityScapes"
   n_class: 41
   img_size: 128
   resized_size: 128
   train_size: null
   mean: 
-    - 0.485
-    - 0.456
-    - 0.406
+    - 0.28689554
+    - 0.32513303
+    - 0.28389177
   std: 
-    - 0.229
-    - 0.224
-    - 0.225
+    - 0.18696375
+    - 0.19017339
+    - 0.18720214
   
 
 optimizer:
@@ -75,8 +75,8 @@ optimizer:
       - 160
     
   hp:
-    lr: 0.1
-    lr_min: 0.0001
+    lr: 0.001
+    lr_min: 0.000001
     warmup_period: null
     warmup_init: 1e-5
     momentum: 0.9
