@@ -48,5 +48,27 @@ def val(device, model, val_progress_bar, criterion, evaluator):
 
     
     
-def test():
-    print(test)
+def test(cfg, device, model, test_loader, criterion, evaluator):
+    model.eval()
+    evaluator.reset()
+    
+    test_progress_bar = tqdm.tqdm(test_loader, desc='Testing')
+    
+    for sample in test_progress_bar:
+        image, label = sample['image'].to(device), sample['label'].to(device)
+
+        with torch.no_grad():
+            output = model(image)
+
+        loss = criterion(output, label.long())
+        pred = torch.argmax(output, dim=1)
+        pred = pred.data.cpu().numpy()
+        label = label.cpu().numpy()
+        evaluator.add_batch(label, pred)
+        test_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
+
+    mIoU = evaluator.Mean_Intersection_over_Union()
+    Acc = evaluator.Pixel_Accuracy()
+    
+    print(f"Test Results - Accuracy: {Acc:.4f}, mIoU: {mIoU:.4f}")
+    return mIoU, Acc
