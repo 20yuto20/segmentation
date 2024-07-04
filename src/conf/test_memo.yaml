@@ -23,30 +23,31 @@ learn:
   n_epoch: 400
   batch_size: 5
 
-## ここはaugmentの実装ができてから擦り合わせましょう
-# augment: 
-#   name: 
-#    - "base"
-#   hp:
-#     rcrop_pad: 4
-#     cutout_p: 0.5
-#     cutout_size: 0.5
-#     ra_p: 1.0
+# ここはaugmentの実装ができてから擦り合わせましょう
+augment: 
+  name: 
+   - "base" # aug name : list
+  # p: probability, どの確率でDAを適用するか
+  hp:
+    rcrop_pad: 4 #rcropの際にパディングする辺のピクセル数
+    cutout_p: 0.5
+    cutout_size: 0.5 #画像の何倍分をcutoutで隠すか
+    ra_p: 1.0
     
-#   ra:
-#     space: "ra"
-#     weight: null
-#     single: null
-#     num_op: 2
-#     magnitude:  14
-#     random_magnitude: True
-#     softmax_t: 0.5
-#     affinity_path: null
-#     fix_iden: True
-#     init_epoch: 20
-#     warmup_ra: False
-#     aff_calc: False
-#     aff_model: null
+  ra:
+    space: "ra" # RAが選択可能なDA手法のspace, "ra" or "jda"が選択可能(基本"ra")
+    weight: null # weight type, "affinity", "random", "single"が選択可能, ra_temp.py参照
+    single: null # weight_type == "singel"の際に使用, ra_temp.py参照
+    num_op: 2
+    magnitude:  14
+    random_magnitude: True
+    softmax_t: 0.5
+    affinity_path: null
+    fix_iden: True # Identity(無変換)の選択買う率は重み付けせずに一定に固定するかどうか
+    init_epoch: 20 # for single pass method
+    warmup_ra: False # for single pass method
+    aff_calc: False # 学習前に学習済みモデルを読み出してかくDA手法のAffinity vakuesを計算してaffinity.csvを用意するか
+    aff_model: null #上の学習済みモデルのweight path
 
   
 
