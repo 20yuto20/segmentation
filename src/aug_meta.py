@@ -1,8 +1,9 @@
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Tuple
 import math
 
+import torch
 import torchvision.transforms.functional as F
-from torch import Tensor
+from torch import Tensor, nn
 
 from augment import Cutout, solarize_add
 
@@ -150,3 +151,106 @@ def _apply_op(
     
     return {'image': img, 'label': label}
 
+
+# copy and paste from original code
+# TODO: if necessary, change this code into segmentaion version
+class DefineAugmentSpace(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        
+    def _ra_augmentation_space(self, num_bins: int, image_size: Tuple[int, int]) -> Dict[str, Tuple[Tensor, bool]]:
+        space_dict = {
+            # op_name: (magnitudes, signed)
+            "Identity": (torch.tensor([0.0]), False),
+            "ShearX": (torch.linspace(0.0, 0.3, num_bins), True),
+            "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
+            "TranslateX": (torch.linspace(0.0, 10.0, num_bins), True),
+            "TranslateY": (torch.linspace(0.0, 10.0, num_bins), True),
+            "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
+            "Brightness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Color": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Contrast": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Sharpness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 4)).round().int(), False),
+            "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
+            "AutoContrast": (torch.tensor([0.0]), False),
+            "Equalize": (torch.tensor([0.0]), False),
+        }
+        if image_size[0] > 100:
+            space_dict["TranslateX"] = (torch.linspace(0.0, 100.0, num_bins), True)
+            space_dict["TranslateY"] = space_dict["TranslateX"]
+
+        return space_dict
+
+
+    def _ra_wide_augmentation_space(self, num_bins: int, image_size: Tuple[int, int]) -> Dict[str, Tuple[Tensor, bool]]:
+        return {
+            # op_name: (magnitudes, signed)
+            "Identity": (torch.tensor([0.0]), False),
+            "ShearX": (torch.linspace(0.0, 0.99, num_bins), True),
+            "ShearY": (torch.linspace(0.0, 0.99, num_bins), True),
+            "TranslateX": (torch.linspace(0.0, 32.0, num_bins), True),
+            "TranslateY": (torch.linspace(0.0, 32.0, num_bins), True),
+            "Rotate": (torch.linspace(0.0, 135.0, num_bins), True),
+            "Brightness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Color": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Contrast": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Sharpness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 6)).round().int(), False),
+            "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
+            "AutoContrast": (torch.tensor([0.0]), False),
+            "Equalize": (torch.tensor([0.0]), False),
+        }
+
+    def _original_augmentation_space(self, num_bins: int, image_size: Tuple[int, int]) -> Dict[str, Tuple[Tensor, bool]]:
+        space_dict = {
+            # op_name: (magnitudes, signed)
+            "Identity": (torch.tensor([0.0]), False),
+            "ShearX": (torch.linspace(0.0, 0.3, num_bins), True),
+            "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
+            "TranslateX": (torch.linspace(0.0, 10, num_bins), True),
+            "TranslateY": (torch.linspace(0.0, 10, num_bins), True),
+            "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
+            "Brightness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Color": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Contrast": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Sharpness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 4)).round().int(), False),
+            "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
+            "AutoContrast": (torch.tensor([0.0]), False),
+            "Equalize": (torch.tensor([0.0]), False),
+            ###
+            "Cutout": (torch.linspace(0.0, 0.5, num_bins), False),
+            "SolarizeAdd": (torch.linspace(0, 110.0, num_bins), False),
+            "Invert": (torch.tensor([0.0]), False),
+            ###
+            "Hflip":(torch.tensor([0.0]), False),
+            "Vflip":(torch.tensor([0.0]), False),
+        }
+        
+        return space_dict
+
+    def _jda_augmentation_space(self, num_bins: int, image_size: Tuple[int, int]) -> Dict[str, Tuple[Tensor, bool]]:
+        space_dict = {
+            # op_name: (magnitudes, signed)
+            "Identity": (torch.tensor([0.0]), False),
+            "ShearX": (torch.linspace(0.0, 0.3, num_bins), True),
+            "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
+            "TranslateX": (torch.linspace(0.0, 10.0, num_bins), True),
+            "TranslateY": (torch.linspace(0.0, 10.0, num_bins), True),
+            "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
+            "Brightness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Color": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Contrast": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Sharpness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 4)).round().int(), False),
+            "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
+            "AutoContrast": (torch.tensor([0.0]), False),
+            "Equalize": (torch.tensor([0.0]), False),
+            "Invert": (torch.tensor([0.0]), False),
+        }
+        if image_size[0] > 100:
+            space_dict["TranslateX"] = (torch.linspace(0.0, 100.0, num_bins), True)
+            space_dict["TranslateY"] = space_dict["TranslateX"]
+
+        return space_dict
