@@ -74,7 +74,12 @@ def main(cfg):
         val_progress_bar = tqdm.tqdm(val_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Val]')
         mIoU, Acc = val(device, model, val_progress_bar, criterion, evaluator)
 
-        all_training_result.append([loss, mIoU, Acc])
+        all_training_result.append({
+            "epoch": epoch,
+            "train_loss": loss,
+            "val_mIoU": mIoU,
+            "val_acc": Acc
+        })
 
         epoch_end_time = time.time()
         total_duration = get_time(epoch_end_time - start_time) # dict型
@@ -104,20 +109,24 @@ def main(cfg):
     # Run test
     test_mIoU, test_Acc = test(cfg, device, model, test_loader, criterion, evaluator)
     print(f"Final Test Results - Test Accuracy: {test_Acc:.4f}, Test mIoU: {test_mIoU:.4f}")
-    all_training_result.append([test_mIoU, test_Acc])
+    test_result = {
+        "test_mIoU": test_mIoU,
+        "test_Acc": test_Acc
+    }
 
-    # 学習結果をdfに，csvファイルに保存
-    all_training_result = pd.DataFrame(
-        np.array(all_training_result),
-        columns=["train_loss", "val_mIoU", "val_acc", "test_mIoU", "test_Acc"],
-    )
-    save_file_path = cfg.out_dir + "output.csv"
-    all_training_result.to_csv(save_file_path, index=False)
+    if len(all_training_result) > 0:
+        train_df = pd.DataFrame(all_training_result)
+        train_df.to_csv(cfg.out_dir + "train_output.csv", index=False)
+        plot_log(cfg, train_df)
 
-    # TODO: add_configの使い方がこれであっているか確認
-    add_config(cfg, {"test_acc" : test_Acc})
-    add_config(cfg, total_training_time)
-    plot_log(cfg, all_training_result)
+    test_df = pd.DataFrame([test_result])
+    test_df.to_csv(cfg.out_dir + "test_output.csv", index=False)
+
+    print(f"Train results saved to: {cfg.out_dir}train_output.csv")
+    print(f"Test results saved to: {cfg.out_dir}test_output.csv")
+
+    add_config(cfg, {"test_acc": float(test_Acc)})
+    add_config(cfg, {"total_training_time": str(total_training_time['time'])})
 
 
 

@@ -1,6 +1,9 @@
 import os
 import sys
+import numpy as np
+
 from pathlib import Path
+
 
 from omegaconf import OmegaConf
 import datetime
@@ -79,8 +82,9 @@ def add_config(cfg, config_name_comp: dict):
     if os.path.exists(config_file_path):
         print("### Add config")
         print(config_name_comp)
-        #cfg = OmegaConf.merge(cfg, config_name_comp)
         for key, value in config_name_comp.items():
+            if isinstance(value, np.float64):
+                value = float(value)
             cfg[key] = value
         with open(config_file_path, "w") as f:
             OmegaConf.save(cfg, f)
