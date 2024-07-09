@@ -1,3 +1,5 @@
 __pycache__/
 slurm-14344.out
 dataset
+slurm-14556.out
+best.pth
