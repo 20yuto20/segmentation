@@ -24,7 +24,7 @@ def setup_config():
     else:
         config_file_name = "test"
         config_file_path = conf_dir / "test.yaml"
-    config_file_path = current_dir + f"/conf/{config_file_name}.yaml"
+    config_file_path = str(current_dir) + f"/conf/{config_file_name}.yaml"
     if os.path.exists(config_file_path):
         cfg = OmegaConf.load(config_file_path)
     else:

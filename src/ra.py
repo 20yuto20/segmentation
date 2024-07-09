@@ -11,7 +11,7 @@ from typing import List, Dict, Optional, Tuple
 from aug_meta import DefineAugmentSpace, _apply_op
 from set_cfg import override_original_config
 
-# TODO: dataloader.py & affinity.pyにRandAugmentSegmentationクラスを元のコードを参考にして継承させる
+# TODO: w/ affinity dataloader.py & affinity.pyにRandAugmentSegmentationクラスを元のコードを参考にして継承させる
 
 def reset_cfg(cfg, init: bool):
     if init:
@@ -40,7 +40,7 @@ def reset_cfg(cfg, init: bool):
     print(OmegaConf.to_yaml(cfg))
     return cfg
 
-class RandAugmentSegmentation(torch.nn.module):
+class RandAugmentSegmentation(torch.nn.Module):
     def __init__(
         self,
         cfg,

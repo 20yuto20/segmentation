@@ -6,6 +6,7 @@ import torch.nn as nn
 from torchvision.models import vit_b_16, vgg16_bn
 
 from model.segnet import SegNet
+from utils.lr_scheduler import PolyLR # polynomialスケジューラーのアルゴリズムが記載されている
 
 
 
@@ -48,7 +49,7 @@ def suggest_optimizer(cfg, model):
     return optimizer
 
 
-# 学習率の設定，基本的にはcosine decayで良いのでは..
+# 学習率の設定，基本的にはcosine decayで良いのでは.. -> polyが最適！！
 def suggest_scheduler(cfg, optimizer):
     if cfg.optimizer.scheduler.name == "fix":
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -69,6 +70,14 @@ def suggest_scheduler(cfg, optimizer):
             optimizer,
             milestones=cfg.optimizer.scheduler.step,
             gamma=0.1,
+        )
+
+    elif cfg.optimizer.scheduler.name == "poly":
+        scheduler = PolyLR(
+            optimizer,
+            T_max=cfg.learn.n_epoch,
+            eta_min=cfg.optimizer.hp.lr_min,
+            power=cfg.optimizer.scheduler.power
         )
         
    

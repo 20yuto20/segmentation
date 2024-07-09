@@ -20,7 +20,7 @@ learn:
   batch_size: 5
 augment:
   name:
-  - base
+  - ra
   hp:
     rcrop_pad: 4
     cutout_p: 0.5
@@ -77,7 +77,7 @@ save:
   affinity: false
   affinity_all: false
   interval: null
-out_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/output/seed1/test/Base/
+out_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/output/seed1/test/RA2_TranslateX_Randmag/
 execute_config_name: test
 override_cmd: []
-datetime: '2024-07-08 09:49:36.206048'
+datetime: '2024-07-09 02:41:24.876566'

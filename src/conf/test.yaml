@@ -20,13 +20,13 @@ network:
 
 
 learn:
-  n_epoch: 10
+  n_epoch: 3
   batch_size: 5
 
 
 augment: 
   name: 
-   - "base"
+   - ra
   hp:
     rcrop_pad: 4
     cutout_p: 0.5
@@ -35,8 +35,8 @@ augment:
     
   ra:
     space: "ra"
-    weight: null
-    single: null
+    weight: single # 第一段階ではsingle
+    single:  TranslateX # 第一段階では特定のDA選択
     num_op: 2
     magnitude:  14
     random_magnitude: True
@@ -50,7 +50,7 @@ augment:
 
   
 dataset:
-  name: "CityScapes"
+  name: "CityScapes" 
   n_class: 41
   img_size: 128
   resized_size: 128
@@ -68,11 +68,12 @@ dataset:
 optimizer:
   name: SGD
   scheduler:
-    name: cosine
+    name: poly
     step:
       - 60
       - 120
       - 160
+    power: 0.9
     
   hp:
     lr: 0.001
