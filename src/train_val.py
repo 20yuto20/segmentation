@@ -10,6 +10,10 @@ def train(device, model, train_progress_bar, optimizer, criterion):
     sum_loss = 0.0
     for sample in train_progress_bar:
         image, label = sample['image'].to(device), sample['label'].to(device)
+
+        # チャンネルの次元を削除する（損失関数が３次元を受け取っているから）
+        if label.dim() == 4:
+            label = label.squeeze(1)
         
         y = model(image)
         loss = criterion(y, label.long())
@@ -28,6 +32,10 @@ def val(device, model, val_progress_bar, criterion, evaluator):
     # 評価の実行
     for sample in val_progress_bar:
         image, label = sample['image'].to(device), sample['label'].to(device)
+
+        # trainと同様に1次元削除して3次元へ
+        if label.dim() == 4:
+            label = label.squeeze(1)
 
         with torch.no_grad():
             y = model(image)
@@ -56,6 +64,10 @@ def test(cfg, device, model, test_loader, criterion, evaluator):
     
     for sample in test_progress_bar:
         image, label = sample['image'].to(device), sample['label'].to(device)
+
+        # 次元の削除
+        if label.dim() == 4:
+            label = label.squeeze(1)
 
         with torch.no_grad():
             output = model(image)

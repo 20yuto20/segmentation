@@ -16,8 +16,8 @@ network:
   pretrained: false
   dropout_rate: 0.3
 learn:
-  n_epoch: 3
-  batch_size: 5
+  n_epoch: 1
+  batch_size: 2
 augment:
   name:
   - ra
@@ -80,4 +80,4 @@ save:
 out_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/output/seed1/test/RA2_TranslateX_Randmag/
 execute_config_name: test
 override_cmd: []
-datetime: '2024-07-09 02:41:24.876566'
+datetime: '2024-07-09 06:03:51.754589'

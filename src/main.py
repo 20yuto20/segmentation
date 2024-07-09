@@ -42,6 +42,7 @@ sys.path.append(parent_dir)
 
 def main(cfg):
     device = setup_device(cfg)
+    # device = torch.device('cpu')
     fixed_r_seed(cfg)
 
     model = suggest_network(cfg)
