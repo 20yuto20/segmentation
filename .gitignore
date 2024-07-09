@@ -2,4 +2,4 @@ __pycache__/
 slurm-14344.out
 dataset
 slurm-14556.out
-best.pth
+best.pthoutput/seed1/test/RA2_TranslateX_Randmag/weights/best.pth
