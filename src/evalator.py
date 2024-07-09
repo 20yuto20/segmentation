@@ -31,3 +31,9 @@ class Evaluator(object):
 
     def reset(self):
         self.confusion_matrix = np.zeros((self.num_class,) * 2)
+
+    def debug_info(self):
+        print("Confusion Matrix:")
+        print(self.confusion_matrix)
+        print(f"Total pixels: {np.sum(self.confusion_matrix)}")
+        print(f"Correct pixels: {np.sum(np.diag(self.confusion_matrix))}")
