@@ -80,4 +80,6 @@ save:
 out_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/output/seed1/test/RA2_TranslateX_Randmag/
 execute_config_name: test
 override_cmd: []
-datetime: '2024-07-09 06:03:51.754589'
+datetime: '2024-07-09 08:12:24.337114'
+test_acc: 1.0
+total_training_time: 0h 17m 22s
