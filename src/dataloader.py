@@ -1,11 +1,12 @@
 import numpy as np
 import os
+import torch
 from PIL import Image, ImageOps, ImageFilter
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 
-from augment import Cutout
+from augment import Cutout, Normalize, ToTensor
 from ra import RandAugmentSegmentation
 
 def is_image(filename):
@@ -46,12 +47,26 @@ class MYDataset(Dataset):
         # 2. アノテーション画像読み込み
         label_file_path = self.filenamesGt[index]+ '.png'
         label_file_path = os.path.join(self._base_dir, self.split, 'label/', label_file_path)
-        label_class_img = Image.open(label_file_path).convert('L')      
+        label_class_img = Image.open(label_file_path).convert('L')  
+
+        # image_array = np.array(label_class_img)
+        # # ピクセルの最大値と最小値を取得
+        # max_pixel_value = image_array.max()
+        # min_pixel_value = image_array.min()
+        # print(max_pixel_value)
+        # print(min_pixel_value)
+
         sample = {'image': img, 'label': label_class_img}
 
         # 3. データ拡張を実施
         if self.transform:
             sample = self.transform(sample)
+
+            # print(f"Image shape: {sample['image'].shape}, dtype: {sample['image'].dtype}")
+            # print(f"Image min: {sample['image'].min()}, max: {sample['image'].max()}")
+            # print(f"Label shape: {sample['label'].shape}, dtype: {sample['label'].dtype}")
+            print(f"Unique label values: {torch.unique(sample['label'])}")
+
 
         return sample
 
@@ -62,8 +77,11 @@ def get_dataloader(cfg):
     dataset_path = str(cur_dir / "dataset" / dataset_name)
     
     train_transform = get_composed_transform(cfg, "train")
+    print(f"train_transform: {train_transform}")
     val_transform = get_composed_transform(cfg, "val")
+    print(f"val_transform: {val_transform}")
     test_transform = get_composed_transform(cfg, "test")
+    print(f"test_transform: {test_transform}")
 
     train_dataset = MYDataset(dataset_path, split='train', transform=train_transform)
     val_dataset = MYDataset(dataset_path, split='val', transform=val_transform)
@@ -125,13 +143,14 @@ def get_composed_transform(cfg, phase):
             else:
                 raise ValueError(f"Invalid Augment ... {aug_name}")
     
-    transform_list.append(
-        lambda x: {'image': transforms.ToTensor()(x['image']),
-                   'label': transforms.ToTensor()(x['label'])}
-    )
-    transform_list.append(
-        lambda x: {'image': transforms.Normalize(cfg.dataset.mean, cfg.dataset.std)(x['image']),
-                   'label': x['label']}
-    )
-        
-    return transforms.Compose(transform_list)
+    transform_list.append(Normalize(mean=cfg.dataset.mean, std=cfg.dataset.std))
+    transform_list.append(ToTensor())
+
+    # transform_list.append(
+    #     lambda x: {'image': torch.from_numpy(x['image'].transpose((2, 0, 1))).float(),
+    #                'label': torch.from_numpy(x['label']).long()}
+    # )
+
+    transform_list = transforms.Compose(transform_list)
+
+    return transform_list

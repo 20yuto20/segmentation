@@ -1,12 +1,16 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
     model.train()
     n_train = 0
     sum_loss = 0.0
     losses = []
+
+    debug_dir = os.path.join(cfg.out_dir, "debug")
+    os.makedirs(debug_dir, exist_ok=True)
 
     for i, sample in enumerate(train_progress_bar):
         image, label = sample['image'].to(device), sample['label'].to(device)
@@ -31,13 +35,15 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
                 pred = torch.argmax(y, dim=1)
                 for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
                     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+                    # print(f"image: {image[j]}")
                     ax1.imshow(image[j].cpu().permute(1, 2, 0))
                     ax1.set_title("Input Image")
                     ax2.imshow(label[j].cpu())
+                    # print(f"label: {label[j]}")
                     ax2.set_title("True Label")
                     ax3.imshow(pred[j].cpu())
                     ax3.set_title("Prediction")
-                    plt.savefig(f"{cfg.out_dir}debug_sample_epoch{epoch}_iter{i}_sample{j}.png")
+                    plt.savefig(f"{debug_dir}debug_sample_epoch{epoch}_iter{i}_sample{j}.png")
                     plt.close()
 
     # After the training loop
@@ -46,7 +52,7 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
     plt.title("Training Loss per Iteration")
     plt.xlabel("Iteration")
     plt.ylabel("Loss")
-    plt.savefig(f"{cfg.out_dir}training_loss_epoch{epoch}.png")
+    plt.savefig(f"{debug_dir}training_loss_epoch{epoch}.png")
     plt.close()
 
     return sum_loss / n_train
