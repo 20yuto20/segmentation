@@ -33,7 +33,7 @@ class MYDataset(Dataset):
 
         # self._base_dir = os.path.join(parent_dir, 'dataset', 'CityScapes')
 
-        self_base_dir = root
+        self._base_dir = root
         
         self.split = split
         self.images_root = os.path.join(self._base_dir, split, 'rgb/')
@@ -61,7 +61,15 @@ class MYDataset(Dataset):
         # 2. アノテーション画像読み込み
         label_file_path = self.filenamesGt[index]+ '.png'
         label_file_path = os.path.join(self._base_dir, self.split, 'label/', label_file_path)
-        label_class_img = Image.open(label_file_path).convert('L')      
+        label_class_img = Image.open(label_file_path).convert('L')  
+        print(label_class_img.mode)  
+        image_array = np.array(label_class_img)
+        # ピクセルの最大値と最小値を取得
+        max_pixel_value = image_array.max()
+        min_pixel_value = image_array.min()
+
+        print(max_pixel_value)  
+        print(min_pixel_value)
         sample = {'image': img, 'label': label_class_img}
 
         # 3. データ拡張を実施

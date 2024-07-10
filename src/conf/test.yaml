@@ -50,7 +50,7 @@ augment:
 
   
 dataset:
-  name: "CityScapes"
+  name: "CitySpaces"
   n_class: 41
   img_size: 128
   resized_size: 128
