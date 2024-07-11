@@ -20,7 +20,7 @@ network:
 
 
 learn:
-  n_epoch: 100
+  n_epoch: 175
   batch_size: 1
 
 

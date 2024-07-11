@@ -65,7 +65,7 @@ class MYDataset(Dataset):
             # print(f"Image shape: {sample['image'].shape}, dtype: {sample['image'].dtype}")
             # print(f"Image min: {sample['image'].min()}, max: {sample['image'].max()}")
             # print(f"Label shape: {sample['label'].shape}, dtype: {sample['label'].dtype}")
-            print(f"Unique label values: {torch.unique(sample['label'])}")
+            # print(f"Unique label values: {torch.unique(sample['label'])}")
 
 
         return sample
@@ -77,11 +77,11 @@ def get_dataloader(cfg):
     dataset_path = str(cur_dir / "dataset" / dataset_name)
     
     train_transform = get_composed_transform(cfg, "train")
-    print(f"train_transform: {train_transform}")
+    # print(f"train_transform: {train_transform}")
     val_transform = get_composed_transform(cfg, "val")
-    print(f"val_transform: {val_transform}")
+    # print(f"val_transform: {val_transform}")
     test_transform = get_composed_transform(cfg, "test")
-    print(f"test_transform: {test_transform}")
+    # print(f"test_transform: {test_transform}")
 
     train_dataset = MYDataset(dataset_path, split='train', transform=train_transform)
     val_dataset = MYDataset(dataset_path, split='val', transform=val_transform)

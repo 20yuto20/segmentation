@@ -1,5 +1,4 @@
 __pycache__/
-slurm-14344.out
 dataset
-slurm-14556.out
-output/seed1/test/RA2_TranslateX_Randmag/weights/best.pth
+output
+*.out

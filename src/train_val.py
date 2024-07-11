@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import tqdm
 
 def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
     model.train()
@@ -29,8 +30,8 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
 
         losses.append(loss.item())
 
-        # Randomly sample and visualize predictions (every 100 iterations)
-        if i % 100 == 0:
+        # Randomly sample and visualize predictions (every 1000 iterations)
+        if i % 1000 == 0:
             with torch.no_grad():
                 pred = torch.argmax(y, dim=1)
                 for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
@@ -43,7 +44,7 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
                     ax2.set_title("True Label")
                     ax3.imshow(pred[j].cpu())
                     ax3.set_title("Prediction")
-                    plt.savefig(f"{debug_dir}debug_sample_epoch{epoch}_iter{i}_sample{j}.png")
+                    plt.savefig(os.path.join(debug_dir, f"debug_sample_epoch{epoch}_iter{i}_sample{j}.png"))
                     plt.close()
 
     # After the training loop
@@ -52,7 +53,7 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
     plt.title("Training Loss per Iteration")
     plt.xlabel("Iteration")
     plt.ylabel("Loss")
-    plt.savefig(f"{debug_dir}training_loss_epoch{epoch}.png")
+    plt.savefig(os.path.join(debug_dir, f"training_loss_epoch{epoch}.png"))
     plt.close()
 
     return sum_loss / n_train

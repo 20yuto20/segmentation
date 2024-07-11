@@ -6,6 +6,7 @@ import torch.nn as nn
 from torchvision.models import vit_b_16, vgg16_bn
 
 from model.segnet import SegNet
+from loss.entropy import CrossEntropyLoss
 from utils.lr_scheduler import PolyLR # polynomialスケジューラーのアルゴリズムが記載されている
 
 
@@ -87,10 +88,9 @@ def suggest_scheduler(cfg, optimizer):
     return scheduler
 
 
-# loss 関数の設定，基本的にはcross entで良いのでは..
-def suggest_loss_func():
-    loss = nn.CrossEntropyLoss(reduction='mean')
-    return loss
+# loss/entropy.pyの中に定義されているCrossEntropyLossクラスを呼び出す
+def suggest_loss_func(cfg):
+    return CrossEntropyLoss(cfg)
 
 
 
