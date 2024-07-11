@@ -54,10 +54,7 @@ dataset:
   - 0.18696375
   - 0.19017339
   - 0.18720214
-<<<<<<< HEAD
-=======
   ignore_label: 255
->>>>>>> fix_train_value
 optimizer:
   name: SGD
   scheduler:
@@ -84,8 +81,4 @@ save:
 out_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/output/seed1/test/Nan/
 execute_config_name: test
 override_cmd: []
-<<<<<<< HEAD
-datetime: '2024-07-09 13:42:13.679460'
-=======
 datetime: '2024-07-11 06:04:55.655675'
->>>>>>> fix_train_value
