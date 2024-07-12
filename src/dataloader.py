@@ -8,8 +8,8 @@ from pathlib import Path
 
 from augment import Cutout, Normalize, ToTensor, Normalize_Tensor
 from ra import RandAugmentSegmentation
-from dataset.city import MYDataset
-from dataset.voc import VOCDataset, make_datapath_list
+from load_dataset.city import MYDataset
+from load_dataset.voc import VOCDataset, make_datapath_list
 
 
 
