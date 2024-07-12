@@ -61,7 +61,8 @@ class MYDataset(Dataset):
         # 2. アノテーション画像読み込み
         label_file_path = self.filenamesGt[index]+ '.png'
         label_file_path = os.path.join(self._base_dir, self.split, 'label/', label_file_path)
-        label_class_img = Image.open(label_file_path).convert('L')  
+        # label_class_img = Image.open(label_file_path).convert('L')  
+        label_class_img = Image.open(label_file_path)
         print(label_class_img.mode)  
         image_array = np.array(label_class_img)
         # ピクセルの最大値と最小値を取得
