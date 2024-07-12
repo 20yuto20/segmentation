@@ -9,7 +9,7 @@ import time
 import pandas as pd
 
 from set_cfg import setup_config, add_config
-from model.segnet import SegNet
+# from model.segnet import SegNet
 from evalator import Evaluator
 from dataloader import get_dataloader
 from train_val import train, val, test
@@ -71,7 +71,7 @@ def main(cfg):
     optimizer = suggest_optimizer(cfg, model)
     scheduler = suggest_scheduler(cfg, optimizer)
 
-    criterion = suggest_loss_func()
+    criterion = suggest_loss_func(cfg)
     criterion.to(device)
 
     train_loader, val_loader, test_loader = get_dataloader(cfg)
