@@ -50,7 +50,15 @@ def visualize_samples(dataloader, num_samples=5):
         ax2.imshow(label, cmap='jet')  # カラーマップを使用
         ax2.set_title("Label")
         
-        plt.savefig(f"sample_visualization_{i}.png")
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(cur_dir)
+
+        save_dir = os.path.join(parent_dir, "output", "sample")
+        os.makedirs(save_dir, exist_ok=True)
+
+        file_path = os.path.join(save_dir, f"sample_visualization_{i}.png")
+        
+        plt.savefig(file_path)
         plt.close()
 
 def main(cfg):

@@ -20,8 +20,8 @@ network:
 
 
 learn:
-  n_epoch: 5
-  batch_size: 1
+  n_epoch: 3
+  batch_size: 5
 
 
 augment: 
@@ -50,11 +50,7 @@ augment:
 
   
 dataset:
-<<<<<<< HEAD
-  name: "CitySpaces"
-=======
   name: "CityScapes" 
->>>>>>> 8a19810 (polynomialスケジューラーとsingleで制御できるロジックを追加)
   n_class: 41
   img_size: 128
   resized_size: 128

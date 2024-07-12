@@ -20,19 +20,7 @@ def image_basename(filename):
 class MYDataset(Dataset):
     
     def __init__(self, root, split, transform):
-<<<<<<< HEAD
-
-        # # detect the dir dynamically
-        # current_dir = os.path.dirname(os.path.abspath(__file__))
-        # parent_dir = os.path.dirname(current_dir)
-
-        # self._base_dir = os.path.join(parent_dir, 'dataset', 'CityScapes')
-
         self._base_dir = root
-        
-=======
-        self._base_dir = root
->>>>>>> 8a19810 (polynomialスケジューラーとsingleで制御できるロジックを追加)
         self.split = split
         self.images_root = os.path.join(self._base_dir, split, 'rgb/')
         self.labels_root = os.path.join(self._base_dir, split, 'label/')
