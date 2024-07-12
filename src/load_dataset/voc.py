@@ -36,8 +36,7 @@ from .psp_data_augmentation import Compose, Scale, RandomRotation, RandomMirror,
 
 
 
-
-
+# TODO: testを読み出すものを追記する、rootpathがtraivalを受け取っているのでtest用のパスを作る
 # どの画像がtrain, valにそれぞれ含まれるかを指定したtxtファイルから画像名のリストを取得
 def make_datapath_list(rootpath):
     """
@@ -89,7 +88,7 @@ def make_datapath_list(rootpath):
 
 
 
-
+# TODO: testにも対応した仕様に変更する
 class VOCDataset(data.Dataset):
     """
     VOC2012のDatasetを作成するクラス。PyTorchのDatasetクラスを継承。
@@ -178,7 +177,7 @@ class VOCDataset(data.Dataset):
 # # データの取り出し例
 
 # # jpeg画像には 縦，横，チャンネル数(RGB)のデータ torch.Size([3, 475, 475])
-# # png画像 (正解ラベル) には 縦，横， torch.Size([3, 475, 475]) ，1ピクセルにスカラー値
+# # png画像 (正解ラベル) には 縦，横， torch.Size([475, 475]) ，1ピクセルにスカラー値
 # # annoは0-20までのクラス，背景は0
 
 # print(val_dataset.__getitem__(0)[0].shape)
