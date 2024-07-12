@@ -28,16 +28,20 @@ def get_dataloader(cfg):
 
     # データセット作成
 
-    # とりあえずif文で書きました，あとで適宜修正
+    # FIXME: とりあえずif文で書きました，あとで適宜修正
     if cfg.dataset.name == "voc":
-        rootpath = "/homes/ypark/code/dataset/VOCdevkit/VOC2012/"
-        train_img_list, train_anno_list, val_img_list, val_anno_list = make_datapath_list(
-            rootpath=rootpath)
+        # FIXME: パスを動的に設定し直す
+        path_2012 = "/homes/ypark/code/dataset/VOCdevkit/VOC2012/"
+        path_2007 = "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/VOC2007"
+        train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list = make_datapath_list(
+            path_2012=path_2012,
+            path_2007=path_2007
+            )
         
         train_dataset = VOCDataset(train_img_list, train_anno_list, phase="train", transform=train_transform, img_size=cfg.dataset.resized_size)
         val_dataset = VOCDataset(val_img_list, val_anno_list, phase="val", transform=val_transform, img_size=cfg.dataset.resized_size)
         ##### 追記をお願いします ############
-        # test_dataset = 
+        test_dataset = VOCDataset(test_img_list, test_anno_list, phase="test", transform=test_transform, img_size=cfg.dataset.resizes_size)
 
 
     train_loader = DataLoader(
@@ -56,18 +60,17 @@ def get_dataloader(cfg):
         pin_memory=True
     )
 
-    # test_loader = DataLoader(
-    #     test_dataset, 
-    #     batch_size=cfg.learn.batch_size, 
-    #     num_workers=cfg.default.num_workers, 
-    #     shuffle=False,
-    #     pin_memory=True
-    # )
+    test_loader = DataLoader(
+        test_dataset, 
+        batch_size=cfg.learn.batch_size, 
+        num_workers=cfg.default.num_workers, 
+        shuffle=False,
+        pin_memory=True
+    )
 
     ### とりあえず，testもvalを返す
 
-    # return train_loader, val_loader, test_loader
-    return train_loader, val_loader, val_loader
+    return train_loader, val_loader, test_loader
 
 def get_composed_transform(cfg, phase):
     transform_list = []
