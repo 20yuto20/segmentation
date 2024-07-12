@@ -1,0 +1,84 @@
+default:
+  env: cotton
+  seed: 1
+  output_dir: output
+  home_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/
+  dataset_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/dataset
+  deterministic: false
+  parallel: false
+  device_id: 0
+  num_workers: 8
+  num_excute: 4
+  make_dir: true
+  add_filename: null
+network:
+  name: segnet
+  pretrained: false
+  dropout_rate: 0.3
+learn:
+  n_epoch: 175
+  batch_size: 1
+augment:
+  name:
+  - 'nan'
+  hp:
+    rcrop_pad: 4
+    cutout_p: 0.5
+    cutout_size: 0.5
+    ra_p: 1.0
+  ra:
+    space: ra
+    weight: single
+    single: Contrast
+    num_op: 2
+    magnitude: 14
+    random_magnitude: true
+    softmax_t: 0.5
+    affinity_path: null
+    fix_iden: true
+    init_epoch: 20
+    warmup_ra: false
+    aff_calc: false
+    aff_model: null
+dataset:
+  name: CityScapes
+  n_class: 34
+  img_size: 128
+  resized_size: 128
+  train_size: null
+  mean:
+  - 0.28689554
+  - 0.32513303
+  - 0.28389177
+  std:
+  - 0.18696375
+  - 0.19017339
+  - 0.18720214
+  ignore_label: 255
+optimizer:
+  name: SGD
+  scheduler:
+    name: poly
+    step:
+    - 60
+    - 120
+    - 160
+    power: 0.9
+  hp:
+    lr: 0.001
+    lr_min: 1.0e-06
+    warmup_period: null
+    warmup_init: 1.0e-05
+    momentum: 0.9
+    weight_decay: 0.0005
+save:
+  img: true
+  plot: true
+  selected: true
+  affinity: false
+  affinity_all: false
+  interval: null
+out_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/output/seed1/test/Nan/
+execute_config_name: test
+override_cmd: []
+datetime: '2024-07-11 06:04:55.655675'

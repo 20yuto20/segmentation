@@ -1,2 +1,5 @@
 __pycache__/
-slurm-14344.out
+dataset/
+output/
+*.out
+output/seed1/test/Nan/weights/best.pth

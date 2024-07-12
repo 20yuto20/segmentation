@@ -6,6 +6,8 @@ import torch.nn as nn
 from torchvision.models import vit_b_16, vgg16_bn
 
 from model.segnet import SegNet
+from loss.entropy import CrossEntropyLoss
+from utils.lr_scheduler import PolyLR # polynomialスケジューラーのアルゴリズムが記載されている
 
 
 
@@ -48,7 +50,7 @@ def suggest_optimizer(cfg, model):
     return optimizer
 
 
-# 学習率の設定，基本的にはcosine decayで良いのでは..
+# 学習率の設定，基本的にはcosine decayで良いのでは.. -> polyが最適！！
 def suggest_scheduler(cfg, optimizer):
     if cfg.optimizer.scheduler.name == "fix":
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -70,6 +72,14 @@ def suggest_scheduler(cfg, optimizer):
             milestones=cfg.optimizer.scheduler.step,
             gamma=0.1,
         )
+
+    elif cfg.optimizer.scheduler.name == "poly":
+        scheduler = PolyLR(
+            optimizer,
+            T_max=cfg.learn.n_epoch,
+            eta_min=cfg.optimizer.hp.lr_min,
+            power=cfg.optimizer.scheduler.power
+        )
         
    
     else:
@@ -78,10 +88,9 @@ def suggest_scheduler(cfg, optimizer):
     return scheduler
 
 
-# loss 関数の設定，基本的にはcross entで良いのでは..
-def suggest_loss_func():
-    loss = nn.CrossEntropyLoss(reduction='mean')
-    return loss
+# loss/entropy.pyの中に定義されているCrossEntropyLossクラスを呼び出す
+def suggest_loss_func(cfg):
+    return CrossEntropyLoss(cfg)
 
 
 

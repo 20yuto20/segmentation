@@ -16,13 +16,12 @@ class Normalize(object):
         img = sample['image']
         mask = sample['label']
         img = np.array(img).astype(np.float32)
-        mask = np.array(mask).astype(np.float32)
+        mask = np.array(mask).astype(np.int64)  # ラベルはint64型に変換
         img /= 255.0
         img -= self.mean
         img /= self.std
        
-        return {'image': img,
-                'label': mask}
+        return {'image': img, 'label': mask}
 
 class ToTensor(object):
     def __call__(self, sample):

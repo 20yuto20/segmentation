@@ -1,15 +1,23 @@
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import os
 import tqdm
 
-import torch
-
-def train(device, model, train_progress_bar, optimizer, criterion):
-    # ネットワークを学習モードへ変更
+def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
     model.train()
-
     n_train = 0
     sum_loss = 0.0
-    for sample in train_progress_bar:
+    losses = []
+
+    debug_dir = os.path.join(cfg.out_dir, "debug")
+    os.makedirs(debug_dir, exist_ok=True)
+
+    for i, sample in enumerate(train_progress_bar):
         image, label = sample['image'].to(device), sample['label'].to(device)
+
+        if label.dim() == 4:
+            label = label.squeeze(1)
         
         y = model(image)
         loss = criterion(y, label.long())
@@ -20,20 +28,48 @@ def train(device, model, train_progress_bar, optimizer, criterion):
         n_train += image.size(0)
         train_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
+        losses.append(loss.item())
+
+        # Randomly sample and visualize predictions (every 1000 iterations)
+        if i % 1000 == 0:
+            with torch.no_grad():
+                pred = torch.argmax(y, dim=1)
+                for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
+                    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+                    # print(f"image: {image[j]}")
+                    ax1.imshow(image[j].cpu().permute(1, 2, 0))
+                    ax1.set_title("Input Image")
+                    ax2.imshow(label[j].cpu())
+                    # print(f"label: {label[j]}")
+                    ax2.set_title("True Label")
+                    ax3.imshow(pred[j].cpu())
+                    ax3.set_title("Prediction")
+                    plt.savefig(os.path.join(debug_dir, f"debug_sample_epoch{epoch}_iter{i}_sample{j}.png"))
+                    plt.close()
+
+    # # After the training loop
+    # plt.figure(figsize=(10, 5))
+    # plt.plot(losses)
+    # plt.title("Training Loss per Iteration")
+    # plt.xlabel("Iteration")
+    # plt.ylabel("Loss")
+    # plt.savefig(os.path.join(debug_dir, f"training_loss_epoch{epoch}.png"))
+    # plt.close()
+
     return sum_loss / n_train
 
 def val(device, model, val_progress_bar, criterion, evaluator):
-    # ネットワークを評価モードへ変更
     model.eval()
-    # 評価の実行
     for sample in val_progress_bar:
         image, label = sample['image'].to(device), sample['label'].to(device)
+
+        if label.dim() == 4:
+            label = label.squeeze(1)
 
         with torch.no_grad():
             y = model(image)
 
         loss = criterion(y, label.long())
-        # sum_loss += loss.item()
         pred = torch.argmax(y, dim=1)
         pred = pred.data.cpu().numpy()
         label = label.cpu().numpy()
@@ -45,9 +81,6 @@ def val(device, model, val_progress_bar, criterion, evaluator):
 
     return mIoU, Acc
 
-
-    
-    
 def test(cfg, device, model, test_loader, criterion, evaluator):
     model.eval()
     evaluator.reset()
@@ -56,6 +89,9 @@ def test(cfg, device, model, test_loader, criterion, evaluator):
     
     for sample in test_progress_bar:
         image, label = sample['image'].to(device), sample['label'].to(device)
+
+        if label.dim() == 4:
+            label = label.squeeze(1)
 
         with torch.no_grad():
             output = model(image)

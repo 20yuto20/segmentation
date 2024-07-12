@@ -20,13 +20,13 @@ network:
 
 
 learn:
-  n_epoch: 10
-  batch_size: 5
+  n_epoch: 175
+  batch_size: 1
 
 
 augment: 
   name: 
-   - "base"
+   - nan
   hp:
     rcrop_pad: 4
     cutout_p: 0.5
@@ -35,8 +35,8 @@ augment:
     
   ra:
     space: "ra"
-    weight: null
-    single: null
+    weight: single # 第一段階ではsingle
+    single: Contrast # 第一段階では特定のDA選択
     num_op: 2
     magnitude:  14
     random_magnitude: True
@@ -50,8 +50,8 @@ augment:
 
   
 dataset:
-  name: "CitySpaces"
-  n_class: 41
+  name: "CityScapes" 
+  n_class: 34
   img_size: 128
   resized_size: 128
   train_size: null
@@ -63,16 +63,18 @@ dataset:
     - 0.18696375
     - 0.19017339
     - 0.18720214
+  ignore_label: 255
   
 
 optimizer:
   name: SGD
   scheduler:
-    name: cosine
+    name: poly
     step:
       - 60
       - 120
       - 160
+    power: 0.9
     
   hp:
     lr: 0.001
