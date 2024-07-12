@@ -19,3 +19,4 @@ seed=101
 python main.py voc \
     default.dataset_dir="/homes/ypark/code/dataset/" \
     augment.name=["nan"] \
+    learn.n_epoch=2

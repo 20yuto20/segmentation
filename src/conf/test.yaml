@@ -75,6 +75,10 @@ optimizer:
       - 120
       - 160
     power: 0.9
+
+  loss: 
+    name: "ce"
+    aux_weight: 0.4
     
   hp:
     lr: 0.001

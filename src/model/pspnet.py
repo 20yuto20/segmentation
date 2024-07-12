@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+### PSPNetは return (output, output_aux) 最終層の出力，特徴量の2つを返す
 
 class PSPNet(nn.Module):
     def __init__(self, n_classes):

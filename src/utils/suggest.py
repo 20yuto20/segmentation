@@ -6,7 +6,8 @@ import torch.nn as nn
 from torchvision.models import vit_b_16, vgg16_bn
 
 from model.segnet import SegNet
-from loss.entropy import CrossEntropyLoss
+from model.pspnet import PSPNet
+from loss.entropy import CrossEntropyLoss, PSPLoss
 from utils.lr_scheduler import PolyLR # polynomialスケジューラーのアルゴリズムが記載されている
 
 
@@ -16,7 +17,9 @@ from utils.lr_scheduler import PolyLR # polynomialスケジューラーのアル
 def suggest_network(cfg):
     if cfg.network.name == "segnet":
         model = SegNet(input_channels=3, output_channels=cfg.dataset.n_class)
-        
+    elif cfg.network.name == "pspnet":
+        model = PSPNet(n_classes=cfg.dataset.n_class)
+
     return model
 
 
@@ -90,7 +93,15 @@ def suggest_scheduler(cfg, optimizer):
 
 # loss/entropy.pyの中に定義されているCrossEntropyLossクラスを呼び出す
 def suggest_loss_func(cfg):
-    return CrossEntropyLoss(cfg)
+    if cfg.optimizer.loss.name == "ce":
+        if cfg.network.name == "pspnet":
+            criterion = PSPLoss(cfg)
+        else:
+            criterion = CrossEntropyLoss(cfg)
+    else: 
+        raise ValueError("incorrect loss name ... available : ce")
+    
+    return criterion
 
 
 

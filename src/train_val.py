@@ -4,6 +4,13 @@ import matplotlib.pyplot as plt
 import os
 import tqdm
 
+def get_pred(y):
+    if isinstance(y, torch.Tensor):
+        out = y
+    else:
+        out = y[0]
+    return torch.argmax(out, dim=1)
+
 def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
     model.train()
     n_train = 0
@@ -14,7 +21,6 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
     os.makedirs(debug_dir, exist_ok=True)
 
     for i, sample in enumerate(train_progress_bar):
-        print(device)
         image, label = sample['image'].to(device), sample['label'].to(device)
 
         if label.dim() == 4:
@@ -32,9 +38,10 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
         losses.append(loss.item())
 
         # Randomly sample and visualize predictions (every 1000 iterations)
-        if i % 1000 == 0:
+        # if i % 1000 == 0:
+        if i % len(train_progress_bar) == 0:
             with torch.no_grad():
-                pred = torch.argmax(y, dim=1)
+                pred = get_pred(y)
                 for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
                     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
                     # print(f"image: {image[j]}")
@@ -71,7 +78,7 @@ def val(device, model, val_progress_bar, criterion, evaluator):
             y = model(image)
 
         loss = criterion(y, label.long())
-        pred = torch.argmax(y, dim=1)
+        pred = get_pred(y)
         pred = pred.data.cpu().numpy()
         label = label.cpu().numpy()
         evaluator.add_batch(label, pred)
@@ -96,9 +103,9 @@ def test(cfg, device, model, test_loader, criterion, evaluator):
 
         with torch.no_grad():
             output = model(image)
-
+        
         loss = criterion(output, label.long())
-        pred = torch.argmax(output, dim=1)
+        pred = get_pred(output)
         pred = pred.data.cpu().numpy()
         label = label.cpu().numpy()
         evaluator.add_batch(label, pred)

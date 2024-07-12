@@ -14,14 +14,14 @@ default:
 
 
 network:
-  name: "segnet"
+  name: "pspnet"
   pretrained: False
   dropout_rate: 0.3
 
 
 learn:
   n_epoch: 175
-  batch_size: 1
+  batch_size: 16
 
 
 augment: 
@@ -51,7 +51,7 @@ augment:
   
 dataset:
   name: "voc" 
-  n_class: 20
+  n_class: 21
   img_size: 475
   resized_size: 475
   train_size: null
@@ -75,14 +75,18 @@ optimizer:
       - 120
       - 160
     power: 0.9
+
+  loss: 
+    name: "ce"
+    aux_weight: 0.4
     
   hp:
-    lr: 0.001
-    lr_min: 0.000001
+    lr: 0.01
+    lr_min: 0.00001
     warmup_period: null
     warmup_init: 1e-5
     momentum: 0.9
-    weight_decay: 5e-4
+    weight_decay: 1e-4
     
 save:
   img: True

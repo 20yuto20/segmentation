@@ -77,6 +77,10 @@ optimizer:
       - 60
       - 120
       - 160
+
+  loss: 
+    name: "ce"
+    aux_weight: 0.4
     
   hp:
     ### 設定し直してください
