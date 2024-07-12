@@ -77,8 +77,8 @@ def main(cfg):
     train_loader, val_loader, test_loader = get_dataloader(cfg)
 
     # Visualize samples from train and validation sets
-    visualize_samples(train_loader)
-    visualize_samples(val_loader)
+    # visualize_samples(train_loader)
+    # visualize_samples(val_loader)
 
     evaluator = Evaluator(cfg.dataset.n_class)
 

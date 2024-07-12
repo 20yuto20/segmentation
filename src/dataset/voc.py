@@ -8,28 +8,35 @@ from PIL import Image
 import torch.utils.data as data
 import torch
 
-from utils.data_augmentation import Compose, Scale, RandomRotation, RandomMirror, Resize, Normalize_Tensor
+from .psp_data_augmentation import Compose, Scale, RandomRotation, RandomMirror, Resize, Normalize_Tensor
 
-
+############################
+## datsetはHPより以下のコードを使って事前にダウンロード ######
 
 # フォルダ「data」が存在しない場合は作成する
-data_dir = "/homes/ypark/code/dataset"
-if not os.path.exists(data_dir):
-    os.mkdir(data_dir)
+#######　適宜修正してください  ##################
+# data_dir = "/homes/ypark/code/dataset"
+# if not os.path.exists(data_dir):
+#     os.mkdir(data_dir)
 
 
-# 公式のHOからVOC2012のデータセットをダウンロード
-# 時間がかかります（約15分）
-url = "http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar"
-target_path = os.path.join(data_dir, "VOCtrainval_11-May-2012.tar") 
+# # 公式のHOからVOC2012のデータセットをダウンロード
+# # 時間がかかります（約15分）
+# url = "http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar"
+# target_path = os.path.join(data_dir, "VOCtrainval_11-May-2012.tar") 
 
-if not os.path.exists(target_path):
-    urllib.request.urlretrieve(url, target_path)
+# if not os.path.exists(target_path):
+#     urllib.request.urlretrieve(url, target_path)
     
-    tar = tarfile.TarFile(target_path)  # tarファイルを読み込み
-    tar.extractall(data_dir)  # tarを解凍
-    tar.close()  # tarファイルをクローズ
+#     tar = tarfile.TarFile(target_path)  # tarファイルを読み込み
+#     tar.extractall(data_dir)  # tarを解凍
+#     tar.close()  # tarファイルをクローズ
     
+############################
+
+
+
+
 
 # どの画像がtrain, valにそれぞれ含まれるかを指定したtxtファイルから画像名のリストを取得
 def make_datapath_list(rootpath):
@@ -81,6 +88,115 @@ def make_datapath_list(rootpath):
     return train_img_list, train_anno_list, val_img_list, val_anno_list
 
 
+
+
+class VOCDataset(data.Dataset):
+    """
+    VOC2012のDatasetを作成するクラス。PyTorchのDatasetクラスを継承。
+
+    Attributes
+    ----------
+    img_list : リスト
+        画像のパスを格納したリスト
+    anno_list : リスト
+        アノテーションへのパスを格納したリスト
+    phase : 'train' or 'test'
+        学習か訓練かを設定する。
+    transform : object
+        前処理クラスのインスタンス
+    """
+
+    def __init__(self, img_list, anno_list, phase, transform, img_size):
+        self.img_list = img_list
+        self.anno_list = anno_list
+        self.phase = phase
+        self.transform = transform
+        self.img_size = img_size
+
+    def __len__(self):
+        '''画像の枚数を返す'''
+        return len(self.img_list)
+
+    def __getitem__(self, index):
+        '''
+        前処理をした画像のTensor形式のデータとアノテーションを取得
+        '''
+        img, anno_class_img = self.pull_item(index)
+        sample = {'image': img, 'label': anno_class_img}
+
+        # 3. データ拡張を実施
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
+
+
+
+    def pull_item(self, index):
+        '''画像のTensor形式のデータ、アノテーションを取得する'''
+
+        # 1. 画像読み込み
+        image_file_path = self.img_list[index]
+        img = Image.open(image_file_path)   # [高さ][幅][色RGB]
+
+        # 2. アノテーション画像読み込み
+        anno_file_path = self.anno_list[index]
+        anno_class_img = Image.open(anno_file_path)   # [高さ][幅]
+
+        ### データごとにサイズが違うので均一のサイズにリサイズ
+        resize_fn = Resize(self.img_size)
+        img, anno_class_img = resize_fn(img, anno_class_img)
+
+        # # 3. 前処理を実施
+        # img, anno_class_img = self.transform(self.phase, img, anno_class_img)
+
+        return img, anno_class_img
+    
+
+
+
+## どんなデータセットか確かめたいときに使用 ##
+
+# rootpath = "/homes/ypark/code/dataset/VOCdevkit/VOC2012/"
+# train_img_list, train_anno_list, val_img_list, val_anno_list = make_datapath_list(
+#     rootpath=rootpath)
+
+# print(train_img_list[0])
+# print(train_anno_list[0])
+
+# # (RGB)の色の平均値と標準偏差
+# color_mean = (0.485, 0.456, 0.406)
+# color_std = (0.229, 0.224, 0.225)
+
+# # データセット作成
+# train_dataset = VOCDataset(train_img_list, train_anno_list, phase="train", transform=DataTransform(
+#     input_size=475, color_mean=color_mean, color_std=color_std))
+
+# val_dataset = VOCDataset(val_img_list, val_anno_list, phase="val", transform=DataTransform(
+#     input_size=475, color_mean=color_mean, color_std=color_std))
+
+# # データの取り出し例
+
+# # jpeg画像には 縦，横，チャンネル数(RGB)のデータ torch.Size([3, 475, 475])
+# # png画像 (正解ラベル) には 縦，横， torch.Size([3, 475, 475]) ，1ピクセルにスカラー値
+# # annoは0-20までのクラス，背景は0
+
+# print(val_dataset.__getitem__(0)[0].shape)
+# print(val_dataset.__getitem__(0)[1].shape)
+# print(val_dataset.__getitem__(10)[1])
+# for i in range(10):
+#     anno_ex = val_dataset.__getitem__(i)[1]
+#     max_value = torch.max(anno_ex)
+#     min_value = torch.min(anno_ex)
+#     print(f"最大値: {max_value}, 最小値: {min_value}")
+#     print(f"unieque anno classes : {torch.unique(anno_ex)}")
+
+
+
+
+
+
+##### PSPNetで使われているtransforms ** 参考までに #######
 class DataTransform():
     """
     画像とアノテーションの前処理クラス。訓練時と検証時で異なる動作をする。
@@ -123,85 +239,3 @@ class DataTransform():
         return self.data_transform[phase](img, anno_class_img)
 
 
-class VOCDataset(data.Dataset):
-    """
-    VOC2012のDatasetを作成するクラス。PyTorchのDatasetクラスを継承。
-
-    Attributes
-    ----------
-    img_list : リスト
-        画像のパスを格納したリスト
-    anno_list : リスト
-        アノテーションへのパスを格納したリスト
-    phase : 'train' or 'test'
-        学習か訓練かを設定する。
-    transform : object
-        前処理クラスのインスタンス
-    """
-
-    def __init__(self, img_list, anno_list, phase, transform):
-        self.img_list = img_list
-        self.anno_list = anno_list
-        self.phase = phase
-        self.transform = transform
-
-    def __len__(self):
-        '''画像の枚数を返す'''
-        return len(self.img_list)
-
-    def __getitem__(self, index):
-        '''
-        前処理をした画像のTensor形式のデータとアノテーションを取得
-        '''
-        img, anno_class_img = self.pull_item(index)
-        return img, anno_class_img
-
-    def pull_item(self, index):
-        '''画像のTensor形式のデータ、アノテーションを取得する'''
-
-        # 1. 画像読み込み
-        image_file_path = self.img_list[index]
-        img = Image.open(image_file_path)   # [高さ][幅][色RGB]
-
-        # 2. アノテーション画像読み込み
-        anno_file_path = self.anno_list[index]
-        anno_class_img = Image.open(anno_file_path)   # [高さ][幅]
-
-        # 3. 前処理を実施
-        img, anno_class_img = self.transform(self.phase, img, anno_class_img)
-
-        return img, anno_class_img
-    
-
-
-
-rootpath = "/homes/ypark/code/dataset/VOCdevkit/VOC2012/"
-train_img_list, train_anno_list, val_img_list, val_anno_list = make_datapath_list(
-    rootpath=rootpath)
-
-print(train_img_list[0])
-print(train_anno_list[0])
-# (RGB)の色の平均値と標準偏差
-color_mean = (0.485, 0.456, 0.406)
-color_std = (0.229, 0.224, 0.225)
-
-# データセット作成
-train_dataset = VOCDataset(train_img_list, train_anno_list, phase="train", transform=DataTransform(
-    input_size=475, color_mean=color_mean, color_std=color_std))
-
-val_dataset = VOCDataset(val_img_list, val_anno_list, phase="val", transform=DataTransform(
-    input_size=475, color_mean=color_mean, color_std=color_std))
-
-# データの取り出し例
-# jpeg画像には 縦，横，チャンネル数(RGB)のデータ torch.Size([3, 475, 475])
-# jpeg画像には 縦，横， torch.Size([3, 475, 475]) ，1ピクセルにスカラー値
-# annoは0-20までのクラス，背景は0
-print(val_dataset.__getitem__(0)[0].shape)
-print(val_dataset.__getitem__(0)[1].shape)
-print(val_dataset.__getitem__(10)[1])
-for i in range(10):
-    anno_ex = val_dataset.__getitem__(i)[1]
-    max_value = torch.max(anno_ex)
-    min_value = torch.min(anno_ex)
-    print(f"最大値: {max_value}, 最小値: {min_value}")
-    print(f"unieque anno classes : {torch.unique(anno_ex)}")

@@ -4,6 +4,7 @@ import math
 import random
 import torch
 import torchvision.transforms.functional as F
+from torchvision import transforms
 
 from PIL import ImageOps, Image
 
@@ -15,6 +16,8 @@ class Normalize(object):
     def __call__(self, sample):
         img = sample['image']
         mask = sample['label']
+        print(img.size())
+        print(mask.size())
         img = np.array(img).astype(np.float32)
         mask = np.array(mask).astype(np.int64)  # ラベルはint64型に変換
         img /= 255.0
@@ -22,6 +25,38 @@ class Normalize(object):
         img /= self.std
        
         return {'image': img, 'label': mask}
+
+
+class Normalize_Tensor(object):
+    def __init__(self, color_mean, color_std):
+        self.color_mean = color_mean
+        self.color_std = color_std
+
+    def __call__(self, sample):
+        img = sample['image']
+        anno_class_img = sample['label']
+
+        # PIL画像をTensorに。大きさは最大1に規格化される
+        img = transforms.functional.to_tensor(img)
+
+        # 色情報の標準化
+        img = transforms.functional.normalize(
+            img, self.color_mean, self.color_std)
+
+        # アノテーション画像をNumpyに変換
+        anno_class_img = np.array(anno_class_img)  # [高さ][幅]
+
+        #### VOCの時この処理に注意　#####
+        # 'ambigious'には255が格納されているので、0の背景にしておく
+        index = np.where(anno_class_img == 255)
+        anno_class_img[index] = 0
+
+        # アノテーション画像をTensorに
+        anno_class_img = torch.from_numpy(anno_class_img)
+
+        return {'image': img, 'label': anno_class_img}
+    
+
 
 class ToTensor(object):
     def __call__(self, sample):
@@ -34,8 +69,9 @@ class ToTensor(object):
         img = torch.from_numpy(img).float()
         mask = torch.from_numpy(mask).float()
 
-        return {'image': img,
-                'label': mask}
+        return {'image': img, 'label': mask}
+    
+
 
 class RandomCrop(object):
     def __init__(self, size, padding=0):
@@ -60,8 +96,8 @@ class RandomCrop(object):
         img = img.crop((x1, y1, x1 + tw, y1 + th))
         mask = mask.crop((x1, y1, x1 + tw, y1 + th))
 
-        return {'image': img,
-                'label': mask}
+        return {'image': img, 'label': mask}
+    
     
 def resize(sample, size, interpolation="bilinear", max_size=None, antialias=None):
     img, label = sample['image'], sample['label']
@@ -79,6 +115,8 @@ def resize(sample, size, interpolation="bilinear", max_size=None, antialias=None
     label_resized = _resize_label(label, size, interpolation, max_size, antialias)
     
     return {'image': img_resized, 'label': label_resized}
+
+
 class Resize(object):
     def _init__(self, size, interpolation="bilinear", max_size=None, antialias=None):
         self.size = size
@@ -88,6 +126,7 @@ class Resize(object):
 
     def __call__(self, sample):
         return resize(sample, self.size, self.interpolation, self.max_size, self.antialias)
+
 
 class Cutout(object):
     """Randomly mask out one or more patches from an image.

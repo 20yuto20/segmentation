@@ -14,6 +14,7 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
     os.makedirs(debug_dir, exist_ok=True)
 
     for i, sample in enumerate(train_progress_bar):
+        print(device)
         image, label = sample['image'].to(device), sample['label'].to(device)
 
         if label.dim() == 4:
