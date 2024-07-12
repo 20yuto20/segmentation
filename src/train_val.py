@@ -47,14 +47,14 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
                     plt.savefig(os.path.join(debug_dir, f"debug_sample_epoch{epoch}_iter{i}_sample{j}.png"))
                     plt.close()
 
-    # After the training loop
-    plt.figure(figsize=(10, 5))
-    plt.plot(losses)
-    plt.title("Training Loss per Iteration")
-    plt.xlabel("Iteration")
-    plt.ylabel("Loss")
-    plt.savefig(os.path.join(debug_dir, f"training_loss_epoch{epoch}.png"))
-    plt.close()
+    # # After the training loop
+    # plt.figure(figsize=(10, 5))
+    # plt.plot(losses)
+    # plt.title("Training Loss per Iteration")
+    # plt.xlabel("Iteration")
+    # plt.ylabel("Loss")
+    # plt.savefig(os.path.join(debug_dir, f"training_loss_epoch{epoch}.png"))
+    # plt.close()
 
     return sum_loss / n_train
 
