@@ -2,11 +2,9 @@
 
 start=`date +%s`
 
-cd "$(dirname "$0")/../.."
+cd ~
 
-mkdir -p dataset/voc
-
-cd dataset/voc
+cd segmentaion/datasets/voc
 
 echo "Downloading VOC2007 trainval ..."
 curl -LO http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
