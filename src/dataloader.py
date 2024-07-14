@@ -11,6 +11,7 @@ from ra import RandAugmentSegmentation
 from load_dataset.city import MYDataset
 from load_dataset.voc import VOCDataset, make_datapath_list
 
+# cfg.default.dataset_dir :  (SGE_LOCAL_DIR) + dataset/
 
 
 def get_dataloader(cfg):
@@ -29,8 +30,15 @@ def get_dataloader(cfg):
     # データセット作成
 
     if cfg.dataset.name == "voc":
-        path_2012 = "/homes/ypark/code/dataset/VOCdevkit/VOC2012/"
-        path_2007 = "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/VOC2007"
+        # path_2012 = "/homes/ypark/code/dataset/VOCdevkit/VOC2012/"
+        # path_2007 = "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/VOC2007"
+
+        # abciで回すために少し変えました．
+        path_2012 = cfg.default.dataset_dir + "VOCdevkit/VOC2012/"
+        path_2007 = cfg.default.dataset_dir + "VOCdevkit/VOC2007/"
+
+        print(f"load data from : {path_2007}")
+
         train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list = make_datapath_list(
             path_2012=path_2012,
             path_2007=path_2007
@@ -39,8 +47,11 @@ def get_dataloader(cfg):
         train_dataset = VOCDataset(train_img_list, train_anno_list, phase="train", transform=train_transform, img_size=cfg.dataset.resized_size)
         val_dataset = VOCDataset(val_img_list, val_anno_list, phase="val", transform=val_transform, img_size=cfg.dataset.resized_size)
         ##### 追記をお願いします ############
-        test_dataset = VOCDataset(test_img_list, test_anno_list, phase="test", transform=test_transform, img_size=cfg.dataset.resizes_size)
+        test_dataset = VOCDataset(test_img_list, test_anno_list, phase="test", transform=test_transform, img_size=cfg.dataset.resized_size)
 
+    print(f"train dataset len : {len(train_dataset)}")
+    print(f"val dataset len : {len(val_dataset)}")
+    print(f"test dataset len : {len(test_dataset)}")
 
     train_loader = DataLoader(
         train_dataset, 

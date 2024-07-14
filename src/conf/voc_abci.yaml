@@ -1,0 +1,100 @@
+default:
+  env: "abci"
+  seed: 1
+  output_dir: "output"
+  home_dir: null
+  dataset_dir: null
+  deterministic: False
+  parallel: False
+  device_id: 0
+  num_workers: 8
+  num_excute: 4
+  make_dir: True
+  add_filename: null
+
+
+network:
+  name: "segnet"
+  pretrained: False
+  dropout_rate: 0.3
+
+
+learn:
+  n_epoch: 175
+  batch_size: 1
+
+
+augment: 
+  name: 
+   - nan
+  hp:
+    rcrop_pad: 4
+    cutout_p: 0.5
+    cutout_size: 0.5
+    ra_p: 1.0
+    
+  ra:
+    space: "ra"
+    weight: single # 第一段階ではsingle
+    single: Contrast # 第一段階では特定のDA選択
+    num_op: 2
+    magnitude:  14
+    random_magnitude: True
+    softmax_t: 0.5
+    affinity_path: null
+    fix_iden: True
+    init_epoch: 20
+    warmup_ra: False
+    aff_calc: False
+    aff_model: null
+
+  
+dataset:
+  name: "voc" 
+  n_class: 21
+  img_size: 47
+  resized_size: 475
+  train_size: null
+  mean: 
+    - 0.485
+    - 0.456
+    - 0.406
+  std: 
+    - 0.229
+    - 0.224
+    - 0.225
+  ignore_label: 255
+  
+
+optimizer:
+  name: SGD
+  scheduler:
+    name: poly
+    step:
+      - 60
+      - 120
+      - 160
+    power: 0.9
+    
+  hp:
+    lr: 0.001
+    lr_min: 0.000001
+    warmup_period: null
+    warmup_init: 1e-5
+    momentum: 0.9
+    weight_decay: 5e-4
+    
+save:
+  img: True
+  plot: True
+  selected: True
+  affinity: False
+  affinity_all: False
+  interval: null
+
+
+
+
+
+
+
