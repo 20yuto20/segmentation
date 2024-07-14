@@ -28,9 +28,7 @@ def get_dataloader(cfg):
 
     # データセット作成
 
-    # FIXME: とりあえずif文で書きました，あとで適宜修正
     if cfg.dataset.name == "voc":
-        # FIXME: パスを動的に設定し直す
         path_2012 = "/homes/ypark/code/dataset/VOCdevkit/VOC2012/"
         path_2007 = "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/VOC2007"
         train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list = make_datapath_list(

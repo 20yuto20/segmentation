@@ -51,8 +51,8 @@ augment:
   
 dataset:
   name: "voc" 
-  n_class: 20
-  img_size: 475
+  n_class: 21
+  img_size: 47
   resized_size: 475
   train_size: null
   mean: 
