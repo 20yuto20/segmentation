@@ -69,7 +69,7 @@ def make_datapath_list(path_2012, path_2007):
     imgpath_template = osp.join(path_2012, 'JPEGImages', '%s.jpg')
     annopath_template = osp.join(path_2012, 'SegmentationClass', '%s.png')
 
-    test_imgpath_template = osp.join(path_2007, 'JPEGImage', '%s.jpg')
+    test_imgpath_template = osp.join(path_2007, 'JPEGImages', '%s.jpg')
     test_annopath_template = osp.join(path_2007, 'SegmentationClass', '%s.png')
 
     # 訓練と検証、それぞれのファイルのID（ファイル名）を取得する
