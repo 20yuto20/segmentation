@@ -1,5 +1,5 @@
 default:
-  env: "cotton"
+  env: "abci"
   seed: 1
   output_dir: "output"
   home_dir: null

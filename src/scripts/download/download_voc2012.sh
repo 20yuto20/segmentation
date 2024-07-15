@@ -3,14 +3,9 @@
 
 start=`date +%s`
 
-# Navigate to the repository root
-cd "$(dirname "$0")/../../"
+cd ~
 
-# Create dataset/voc directory if it doesn't exist
-mkdir -p dataset/voc
-
-# Navigate to dataset/voc
-cd dataset/voc
+cd segmentaion/datasets/voc
 
 # Download VOC2012
 echo "Downloading VOC2012 trainval ..."

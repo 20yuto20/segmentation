@@ -16,6 +16,8 @@ from .psp_data_augmentation import Compose, Scale, RandomRotation, RandomMirror,
 # フォルダ「data」が存在しない場合は作成する
 #######　適宜修正してください  ##################
 # data_dir = "/homes/ypark/code/dataset"
+# ## abci用
+# data_dir = "/groups/gaa50073/park-yuna/datasets"
 # if not os.path.exists(data_dir):
 #     os.mkdir(data_dir)
 
@@ -23,7 +25,10 @@ from .psp_data_augmentation import Compose, Scale, RandomRotation, RandomMirror,
 # # 公式のHOからVOC2012のデータセットをダウンロード
 # # 時間がかかります（約15分）
 # url = "http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar"
+# url = "http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar"
+
 # target_path = os.path.join(data_dir, "VOCtrainval_11-May-2012.tar") 
+# target_path = os.path.join(data_dir, "VOCtest_06-Nov-2007.tar") 
 
 # if not os.path.exists(target_path):
 #     urllib.request.urlretrieve(url, target_path)
@@ -34,11 +39,18 @@ from .psp_data_augmentation import Compose, Scale, RandomRotation, RandomMirror,
     
 ############################
 
+# "/groups/gaa50073/park-yuna/datasets/VOCtest_06-Nov-2007.tar"
+# "/groups/gaa50073/park-yuna/datasets/VOCtrainval_11-May-2012.tar"
+# を解凍すると，
+# "/groups/gaa50073/park-yuna/datasets/VOCdevkit/ - VOC2007 と - VOC2012 ができる"
+
+# cfg.default.dataset_dir :  (SGE_LOCAL_DIR) + dataset/
+
 
 
 # TODO: testを読み出すものを追記する、rootpathがtraivalを受け取っているのでtest用のパスを作る
 # どの画像がtrain, valにそれぞれ含まれるかを指定したtxtファイルから画像名のリストを取得
-def make_datapath_list(rootpath):
+def make_datapath_list(path_2012, path_2007):
     """
     学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する。
 
@@ -54,13 +66,17 @@ def make_datapath_list(rootpath):
     """
 
     # 画像ファイルとアノテーションファイルへのパスのテンプレートを作成
-    imgpath_template = osp.join(rootpath, 'JPEGImages', '%s.jpg')
-    annopath_template = osp.join(rootpath, 'SegmentationClass', '%s.png')
+    imgpath_template = osp.join(path_2012, 'JPEGImages', '%s.jpg')
+    annopath_template = osp.join(path_2012, 'SegmentationClass', '%s.png')
+
+    test_imgpath_template = osp.join(path_2007, 'JPEGImages', '%s.jpg')
+    test_annopath_template = osp.join(path_2007, 'SegmentationClass', '%s.png')
 
     # 訓練と検証、それぞれのファイルのID（ファイル名）を取得する
     # ここにどのデータがtrainでどれがvalか書いてある
-    train_id_names = osp.join(rootpath + 'ImageSets/Segmentation/train.txt')
-    val_id_names = osp.join(rootpath + 'ImageSets/Segmentation/val.txt')
+    train_id_names = osp.join(path_2012 + 'ImageSets/Segmentation/train.txt')
+    val_id_names = osp.join(path_2012 + 'ImageSets/Segmentation/val.txt')
+    test_id_names = osp.join(path_2007 + 'ImageSets/Segmentation/test.txt')
 
     # 訓練データの画像ファイルとアノテーションファイルへのパスリストを作成
     train_img_list = list()
@@ -84,7 +100,18 @@ def make_datapath_list(rootpath):
         val_img_list.append(img_path)
         val_anno_list.append(anno_path)
 
-    return train_img_list, train_anno_list, val_img_list, val_anno_list
+    # テストデータの画像ファイルとアノテーションファイルへのパスリストを作成
+    test_img_list = list()
+    test_anno_list = list()
+
+    for line in open(test_id_names):
+        file_id = line.strip()
+        img_path = (test_imgpath_template % file_id)
+        anno_path = (test_annopath_template % file_id)
+        test_img_list.append(img_path)
+        test_anno_list.append(anno_path)
+
+    return train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list
 
 
 

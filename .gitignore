@@ -3,4 +3,6 @@ dataset/
 output/
 *.out
 output/seed1/test/Nan/weights/best.pth
+.vscode
+datasets/
 comi/
