@@ -62,14 +62,40 @@ def plot_log(cfg, data):
     ax[0].tick_params(labelsize=25)
     ax[0].grid()
 
-    ax[1].plot(epochs, data["val_mIoU"], label='mIoU', alpha=0.8, linewidth=5)
-    ax[1].plot(epochs, data["val_acc"], label='acc', alpha=0.8, linewidth=5)
+    # ax[1].plot(epochs, data["val_mIoU"], label='mIoU', alpha=0.8, linewidth=5)
+    # ax[1].plot(epochs, data["val_acc"], label='acc', alpha=0.8, linewidth=5)
+    # ax[1].set_title('Validation', fontsize=30)
+    # ax[1].set_xlabel('Epochs', fontsize=25)
+    # ax[1].set_ylabel('Accuracy', fontsize=25)
+    # ax[1].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
+    # ax[1].tick_params(labelsize=25)
+    # ax[1].grid()
+
+    # ax[1].plot(epochs, data["val_mIoU"], label='mIoU', alpha=0.8, linewidth=5)
+    # ax[1].plot(epochs, data["val_acc"], label='acc', alpha=0.8, linewidth=5)
+    # ax[1].set_title('Validation', fontsize=30)
+    # ax[1].set_xlabel('Epochs', fontsize=25)
+    # ax[1].set_ylabel('Accuracy', fontsize=25)
+    # ax[1].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
+    # ax[1].tick_params(labelsize=25)
+    # ax[1].grid()
+
+    ax2 = ax[1].twinx()
+    ax[1].plot(epochs, data["val_mIoU"], label='mIoU', alpha=0.8, linewidth=5, color='tab:blue')
+    ax2.plot(epochs, data["val_acc"], label='acc', alpha=0.8, linewidth=5, color='tab:orange')
+
     ax[1].set_title('Validation', fontsize=30)
     ax[1].set_xlabel('Epochs', fontsize=25)
-    ax[1].set_ylabel('Accuracy', fontsize=25)
-    ax[1].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
-    ax[1].tick_params(labelsize=25)
-    ax[1].grid()
+    ax[1].set_ylabel('mIoU', fontsize=25, color='tab:blue')
+    ax2.set_ylabel('Accuracy', fontsize=25, color='tab:orange')
+
+    ax[1].tick_params(labelsize=25, axis='y', colors='tab:blue')
+    ax2.tick_params(labelsize=25, axis='y', colors='tab:orange')
+
+    h1, l1 = ax[1].get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax[1].legend(h1+h2, l1+l2, bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
+
     
     fig.suptitle(f"{cfg.out_dir}")
     plt.tight_layout()
