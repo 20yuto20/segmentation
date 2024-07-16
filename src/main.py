@@ -36,6 +36,11 @@ def visualize_samples(dataloader, num_samples=5):
     samples = next(iter(dataloader))
     images, labels = samples['image'], samples['label']
 
+    # color_palette = []
+    # for i in range(20):
+    #     color_palette.append([i, i, i])
+    # color_palette = np.array(color_palette)
+
     for i in range(min(num_samples, len(images))):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
         
@@ -47,7 +52,10 @@ def visualize_samples(dataloader, num_samples=5):
         
         # ラベルの表示
         label = labels[i].squeeze().numpy()  # チャンネル次元を削除
-        ax2.imshow(label, cmap='jet')  # カラーマップを使用
+        # label = color_palette[label]    # カラーパレットに従ってRGBに変更
+        # label = (label - label.min()) / (label.max() - label.min())
+        # ax2.imshow(label, cmap='jet')  # カラーマップを使用
+        ax2.imshow(label)
         ax2.set_title("Label")
         
         cur_dir = os.path.dirname(os.path.abspath(__file__))
@@ -60,6 +68,7 @@ def visualize_samples(dataloader, num_samples=5):
         
         plt.savefig(file_path)
         plt.close()
+
 
 def main(cfg):
     device = setup_device(cfg)
@@ -77,8 +86,8 @@ def main(cfg):
     train_loader, val_loader, test_loader = get_dataloader(cfg)
 
     # Visualize samples from train and validation sets
-    # visualize_samples(train_loader)
-    # visualize_samples(val_loader)
+    visualize_samples(train_loader)
+    visualize_samples(val_loader)
 
     evaluator = Evaluator(cfg.dataset.n_class)
 
