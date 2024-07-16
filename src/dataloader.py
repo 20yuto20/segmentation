@@ -1,6 +1,9 @@
 import numpy as np
 import os
 import torch
+import random
+import matplotlib as plt
+
 from PIL import Image, ImageOps, ImageFilter
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
@@ -77,7 +80,7 @@ def get_dataloader(cfg):
         pin_memory=True
     )
 
-    ### とりあえず，testもvalを返す
+    visualize_augmentations(cfg, train_dataset)
 
     return train_loader, val_loader, test_loader
 
@@ -121,5 +124,49 @@ def get_composed_transform(cfg, phase):
 
     return transform_list
 
+def visualize_augmentations(cfg, train_dataset):
+    """This function is for debuggind and shows the differences between orignal one and augmented one by visualizing.
 
+    Args:
+        cfg (_type_): _description_
+        train_dataset (_type_): _description_
+    """
+    output_dir = os.path.join(cfg.out_dir, "aug_samples")
+    os.makedirs(output_dir, exist_ok=True)
+
+    sample_indices = random.sample(range(len(train_dataset)), 5) # 一応5にしてあります。適宜欲しいサンプル数の数だけ値を変更してください。
+    
+    for idx in sample_indices:
+
+        original_sample = train_dataset.pull_item(idx)
+        original_image = original_sample['image']
+        original_label = original_sample['label']
+
+        aug_sample = train_dataset.pull_item[idx]
+        aug_image = aug_sample['image']
+        aug_label = aug_sample['label']
+
+        fig, axs = plt.subplots(2, 2, figsize=(12, 12))
+
+        axs[0, 0].imshow(original_image.permute(1, 2, 0))
+        axs[0, 0].set_title("Original Image")
+        axs[0, 0].axis('off')
+
+        axs[0, 1].imshow(original_label, cmap='jet')
+        axs[0, 1].set_title("Original Label")
+        axs[0, 1].axis('off')
+
+        axs[1, 0].imshow(aug_image.permute(1, 2, 0))
+        axs[1, 0].set_title("Augmented Image")
+        axs[1, 0].axis('off')
+        
+        axs[1, 1].imshow(aug_label, cmap='jet')
+        axs[1, 1].set_title("Augmented Label")
+        axs[1, 1].axis('off')
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f"augmentation_sample_{idx}.png"))
+        plt.close()
+        
+    print(f"Augmentation samples saved to {output_dir}")
 
