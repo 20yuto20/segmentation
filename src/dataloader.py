@@ -2,14 +2,14 @@ import numpy as np
 import os
 import torch
 import random
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 from PIL import Image, ImageOps, ImageFilter
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 
-from augment import Cutout, Normalize, ToTensor, Normalize_Tensor
+from augment import Cutout, Normalize, ToTensor, Normalize_Tensor, RandomCrop
 from ra import RandAugmentSegmentation
 from load_dataset.city import MYDataset
 from load_dataset.voc import VOCDataset, make_datapath_list
@@ -91,8 +91,7 @@ def get_composed_transform(cfg, phase):
         for aug_name in cfg.augment.name:
             if aug_name == "rcrop":
                 transform_list.append(
-                    lambda x: {'image': transforms.RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad)(x['image']),
-                               'label': transforms.RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad)(x['label'])}
+                    RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad)
                 )
             elif aug_name == "hflip":
                 transform_list.append(
@@ -125,7 +124,7 @@ def get_composed_transform(cfg, phase):
     return transform_list
 
 def visualize_augmentations(cfg, train_dataset):
-    """This function is for debuggind and shows the differences between orignal one and augmented one by visualizing.
+    """This function is for debugging and shows the differences between original one and augmented one by visualizing.
 
     Args:
         cfg (_type_): _description_
@@ -137,18 +136,15 @@ def visualize_augmentations(cfg, train_dataset):
     sample_indices = random.sample(range(len(train_dataset)), 5) # 一応5にしてあります。適宜欲しいサンプル数の数だけ値を変更してください。
     
     for idx in sample_indices:
-
-        original_sample = train_dataset.pull_item(idx)
-        original_image = original_sample['image']
-        original_label = original_sample['label']
-
-        aug_sample = train_dataset.pull_item[idx]
+        original_image, original_label = train_dataset.pull_item(idx)
+        
+        aug_sample = train_dataset[idx]
         aug_image = aug_sample['image']
         aug_label = aug_sample['label']
 
         fig, axs = plt.subplots(2, 2, figsize=(12, 12))
 
-        axs[0, 0].imshow(original_image.permute(1, 2, 0))
+        axs[0, 0].imshow(original_image)
         axs[0, 0].set_title("Original Image")
         axs[0, 0].axis('off')
 
@@ -169,4 +165,3 @@ def visualize_augmentations(cfg, train_dataset):
         plt.close()
         
     print(f"Augmentation samples saved to {output_dir}")
-

@@ -1,6 +1,6 @@
 default:
   env: "cotton"
-  seed: 1
+  seed: 102
   output_dir: "output"
   home_dir: null
   dataset_dir: null
@@ -20,13 +20,13 @@ network:
 
 
 learn:
-  n_epoch: 175
+  n_epoch: 30
   batch_size: 16
 
 
 augment: 
   name: 
-   - nan
+   - rcrop
   hp:
     rcrop_pad: 237
     # 画像サイズが475なことから

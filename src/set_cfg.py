@@ -16,16 +16,18 @@ def setup_config():
     # parent_dir : ['/homes/ypark/code/segmentation/']
 
     args = sys.argv
-    print(args)
+    print(f"args: {args}")
 
     current_dir = Path(__file__).resolve().parent
     conf_dir = current_dir / "conf"
 
     if len(args) > 1:
         config_file_name = args[1]
+        print(f"config_file_name: {config_file_name}")
         config_file_path = conf_dir / f"{config_file_name}.yaml"
     else:
         config_file_name = "test"
+        print("selected file is a test.yaml")
         config_file_path = conf_dir / "test.yaml"
     config_file_path = str(current_dir) + f"/conf/{config_file_name}.yaml"
     if os.path.exists(config_file_path):

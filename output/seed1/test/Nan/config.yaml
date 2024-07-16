@@ -64,6 +64,9 @@ optimizer:
     - 120
     - 160
     power: 0.9
+  loss:
+    name: ce
+    aux_weight: 0.4
   hp:
     lr: 0.001
     lr_min: 1.0e-06
@@ -81,4 +84,4 @@ save:
 out_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/output/seed1/test/Nan/
 execute_config_name: test
 override_cmd: []
-datetime: '2024-07-11 06:04:55.655675'
+datetime: '2024-07-16 05:56:24.435924'

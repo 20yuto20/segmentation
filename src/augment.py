@@ -1,6 +1,5 @@
 import numpy as np
 import numbers
-import math
 import random
 import torch
 import torchvision.transforms.functional as F
@@ -85,16 +84,15 @@ class RandomCrop(object):
         img, mask = sample['image'], sample['label']
 
         if self.padding > 0:
-            img = ImageOps.expand(img, border=self.padding, fill=0)
-            mask = ImageOps.expand(mask, border=self.padding, fill=255)
+            img = F.pad(img, self.padding, fill=0)
+            mask = F.pad(mask, self.padding, fill=255)
 
-        assert img.size == mask.size
-        w, h = img.size
-        th, tw = self.size # target size
-        x1 = random.randint(0, w - tw)
-        y1 = random.randint(0, h - th)
-        img = img.crop((x1, y1, x1 + tw, y1 + th))
-        mask = mask.crop((x1, y1, x1 + tw, y1 + th))
+        # クロップ位置を乱数で固定
+        i, j, h, w = transforms.RandomCrop.get_params(img, output_size=self.size)
+    
+        # 画像とラベルを同じ位置でクロップ    
+        img = F.crop(img, i, j, h, w)
+        mask = F.crop(mask, i, j, h, w)
 
         return {'image': img, 'label': mask}
     

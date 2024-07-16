@@ -14,4 +14,5 @@ echo "ok"
 cd $WORKDIR/src
 
 seed=101
-python main.py
+python main.py voc \
+    default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/"
