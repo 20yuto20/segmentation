@@ -89,7 +89,7 @@ def main(cfg):
     visualize_samples(train_loader)
     visualize_samples(val_loader)
 
-    evaluator = Evaluator(cfg.dataset.n_class)
+    evaluator = Evaluator(cfg.dataset.n_class, cfg.dataset.ignore_label)
 
     all_training_result = []
     start_time = time.time()

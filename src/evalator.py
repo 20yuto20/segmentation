@@ -2,9 +2,10 @@ import numpy as np
 
 
 class Evaluator(object):
-    def __init__(self, num_class):
+    def __init__(self, num_class, ignore_iabel):
         
         self.num_class = num_class
+        self.ignore_label = ignore_iabel
         self.confusion_matrix = np.zeros((self.num_class,)*2)
 
     def Pixel_Accuracy(self):
@@ -19,8 +20,11 @@ class Evaluator(object):
         return MIoU
 
     def _generate_matrix(self, gt_image, pre_image):
-        mask = (gt_image >= 0) & (gt_image < self.num_class)
-        label = self.num_class * gt_image[mask].astype('int') + pre_image[mask]
+        mask = (gt_image != self.ignore_label)
+        gt_image = gt_image[mask]
+        pre_image = pre_image[mask]
+        
+        label = self.num_class * gt_image.astype('int') + pre_image
         count = np.bincount(label, minlength=self.num_class**2)
         confusion_matrix = count.reshape(self.num_class, self.num_class)
         return confusion_matrix

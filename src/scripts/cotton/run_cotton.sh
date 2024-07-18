@@ -13,6 +13,7 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=101
+seed=104
 python main.py voc \
-    default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/"
+    default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/" \
+    augment.name=["rcrop","hflip"]

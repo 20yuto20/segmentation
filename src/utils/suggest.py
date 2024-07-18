@@ -16,8 +16,10 @@ from utils.lr_scheduler import PolyLR # polynomialスケジューラーのアル
 # 後にsegnet以外も使いたい時があるかも
 def suggest_network(cfg):
     if cfg.network.name == "segnet":
+        print("Selected network is a SEGNET!")
         model = SegNet(input_channels=3, output_channels=cfg.dataset.n_class)
     elif cfg.network.name == "pspnet":
+        print("Selected network is a PSPNET!")
         model = PSPNet(n_classes=cfg.dataset.n_class)
 
     return model

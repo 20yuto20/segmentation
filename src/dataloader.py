@@ -95,9 +95,18 @@ def get_composed_transform(cfg, phase):
                 )
             elif aug_name == "hflip":
                 transform_list.append(
-                    lambda x: {'image': transforms.RandomHorizontalFlip(p=0.5)(x['image']),
-                               'label': transforms.RandomHorizontalFlip(p=0.5)(x['label'])}
+                    lambda x: {
+                        'image': ImageOps.mirror(x['image']),
+                        'label': ImageOps.mirror(x['label'])
+                    }
                 )
+                # 50%
+                # transform_list.append(
+                #     lambda x: {
+                #         'image': x['image'].flip(-1) if random.random() < 0.5 else x['image'],
+                #         'label': x['label'].flip(-1) if x['image'].flip(-1).equal(x['image']) else x['label']
+                #     }
+                # )
             elif aug_name == "cutout":
                 transform_list.append(
                     transforms.RandomApply(

@@ -1,6 +1,6 @@
 default:
   env: "cotton"
-  seed: 102
+  seed: 105
   output_dir: "output"
   home_dir: null
   dataset_dir: null
@@ -20,7 +20,7 @@ network:
 
 
 learn:
-  n_epoch: 30
+  n_epoch: 330
   batch_size: 16
 
 
