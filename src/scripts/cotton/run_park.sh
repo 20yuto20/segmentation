@@ -18,5 +18,4 @@ cd $WORKDIR
 seed=101
 python main.py test \
     default.dataset_dir="/homes/ypark/code/dataset/" \
-    augment.name=["ra"] \
-    augment.ra.weight="random"
+    augment.name=["cutout"]

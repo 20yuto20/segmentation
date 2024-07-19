@@ -13,7 +13,11 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=104
+seed=105
 python main.py voc \
     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/" \
-    augment.name=["rcrop","hflip"]
+    default.seed=105 \
+    learn.n_epoch=3 \
+    augment.name=["ra"] \
+    augment.ra.weight="single" \
+    augment.ra.single="Brightness"

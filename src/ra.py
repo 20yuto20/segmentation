@@ -108,6 +108,7 @@ class RandAugmentSegmentation(torch.nn.Module):
             # 重みに基づいて拡張操作を選択
             op_index = torch.multinomial(torch.tensor(list(self.weight.values())), 1, replacement=True).item()
             op_name = list(self.op_meta.keys())[op_index]
+            # print(f"Selected operation: {op_name}")
             mag_range, signed = self.op_meta[op_name]
 
             # ランダムマグニチュードが有効な場合、マグニチュードをランダムに選択

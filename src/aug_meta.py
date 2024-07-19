@@ -1,6 +1,9 @@
 from typing import List, Dict, Optional, Union, Tuple
 import math
+import matplotlib.pyplot as plt
+import numpy as np
 
+from PIL import ImageOps
 import torch
 import torchvision.transforms.functional as F
 from torch import Tensor, nn
@@ -62,6 +65,30 @@ def _apply_op(
             fill=255,
             center=[0, 0],
         )
+    ## debug and test code for Translate X
+    # elif op_name == "TranslateX":
+    #     # 画像の幅の30%の移動を適用
+    #     width = img.size[-1]  # 画像の幅を取得
+    #     fixed_magnitude = int(0.3 * width)  # 幅の30%を計算
+
+    #     img = F.affine(
+    #         img,
+    #         angle=0.0,
+    #         translate=[fixed_magnitude, 0],  # fixed_magnitude を使用
+    #         scale=1.0,
+    #         interpolation=interpolation,
+    #         shear=[0.0, 0.0],
+    #         fill=fill,
+    #     )
+    #     label = F.affine(
+    #         label,
+    #         angle=0.0,
+    #         translate=[fixed_magnitude, 0],  # 同じ値を使用
+    #         scale=1.0,
+    #         interpolation=F.InterpolationMode.NEAREST,
+    #         shear=[0.0, 0.0],
+    #         fill=255,
+    #     )
     elif op_name == "TranslateX":
         img = F.affine(
             img,
@@ -81,6 +108,28 @@ def _apply_op(
             shear=[0.0, 0.0],
             fill=255,
         )
+    # # debug and test for Translate Y
+    # elif op_name == "TranslateY":
+    #     height = img.size[-2]
+    #     fixed_mag = int(height * 0.3)
+    #     img = F.affine(
+    #         img,
+    #         angle=0.0,
+    #         translate=[0, fixed_mag],
+    #         scale=1.0,
+    #         interpolation=interpolation,
+    #         shear=[0.0, 0.0],
+    #         fill=fill,
+    #     )
+    #     label = F.affine(
+    #         label,
+    #         angle=0.0,
+    #         translate=[0, fixed_mag],
+    #         scale=1.0,
+    #         interpolation=F.InterpolationMode.NEAREST,
+    #         shear=[0.0, 0.0],
+    #         fill=255,
+    #     )
     elif op_name == "TranslateY":
         img = F.affine(
             img,
@@ -104,7 +153,11 @@ def _apply_op(
         img = F.rotate(img, magnitude, interpolation=interpolation, fill=fill)
         label = F.rotate(label, magnitude, interpolation=F.InterpolationMode.NEAREST, fill=255)
     elif op_name == "Brightness":
+        magnitude = 2.0
         img = F.adjust_brightness(img, 1.0 + magnitude)
+        # # print(f"Applied {op_name} with magnitude {magnitude}")  
+        # brightness_factor = max(0.5, min(1.5, 1.0 + magnitude))  # 0.5から1.5の範囲に制限
+        # img = F.adjust_brightness(img, brightness_factor)
         # ラベルには適用しない
     elif op_name == "Color":
         img = F.adjust_saturation(img, 1.0 + magnitude)
@@ -113,20 +166,24 @@ def _apply_op(
         img = F.adjust_contrast(img, 1.0 + magnitude)
         # ラベルには適用しない
     elif op_name == "Sharpness":
+        # magnitude = 5.0
         img = F.adjust_sharpness(img, 1.0 + magnitude)
         # ラベルには適用しない
     elif op_name == "Posterize":
+        # magnitude = 2.0
         img = F.posterize(img, int(magnitude))
         # ラベルには適用しない
     elif op_name == "Solarize":
         img = F.solarize(img, magnitude)
         # ラベルには適用しない
+    # FIXME: NOT applied
     elif op_name == "AutoContrast":
         img = F.autocontrast(img)
         # ラベルには適用しない
     elif op_name == "Equalize":
         img = F.equalize(img)
         # ラベルには適用しない
+    # FIXME: NOT applied
     elif op_name == "Invert":
         img = F.invert(img)
         # ラベルには適用しない
@@ -134,18 +191,25 @@ def _apply_op(
         pass
     elif op_name == "Cutout":
         _, height, width = F.get_dimensions(img)
-        cutout = Cutout(n_holes=1, img_size=height, patch_size=magnitude)
-        img = cutout(img)
-        label = cutout(label)
+        cutout = Cutout(n_holes=1, img_size=min(height, width), patch_size=magnitude)
+        sample = cutout({'image': img, 'label': label})
+        img, label = sample['image'], sample['label']
     elif op_name == "SolarizeAdd":
         img = solarize_add(image=img, addition=int(magnitude), threshold=128)
         # ラベルには適用しない
+    # FIXME: NOT applied
     elif op_name == "Hflip":
-        img = F.hflip(img)
-        label = F.hflip(label)
+        print("Applying Hflip")  # デバッグ用
+        print(f"Before Hflip - Image shape: {img.size}, Type: {type(img)}")
+        img = ImageOps.mirror(img)
+        label = ImageOps.mirror(label)
+        print(f"After Hflip - Image shape: {img.size}, Type: {type(img)}")
+        print("Hflip Applied")  # デバッグ用
+    # FIXME: NOT applied 
     elif op_name == "Vflip":
         img = F.vflip(img)
         label = F.vflip(label)
+        
     else:
         raise ValueError(f"The provided operator {op_name} is not recognized.")
     
@@ -175,6 +239,11 @@ class DefineAugmentSpace(nn.Module):
             "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
             "AutoContrast": (torch.tensor([0.0]), False),
             "Equalize": (torch.tensor([0.0]), False),
+            "Cutout": (torch.linspace(0.0, 0.5, num_bins), False),
+            "SolarizeAdd": (torch.linspace(0, 110.0, num_bins), False),
+            "Invert": (torch.tensor([0.0]), False),
+            "Hflip":(torch.tensor([0.0]), False),
+            "Vflip":(torch.tensor([0.0]), False)
         }
         if image_size[0] > 100:
             space_dict["TranslateX"] = (torch.linspace(0.0, 100.0, num_bins), True)
@@ -199,7 +268,7 @@ class DefineAugmentSpace(nn.Module):
             "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 6)).round().int(), False),
             "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
             "AutoContrast": (torch.tensor([0.0]), False),
-            "Equalize": (torch.tensor([0.0]), False),
+            "Equalize": (torch.tensor([0.0]), False)
         }
 
     def _original_augmentation_space(self, num_bins: int, image_size: Tuple[int, int]) -> Dict[str, Tuple[Tensor, bool]]:

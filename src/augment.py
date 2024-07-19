@@ -126,53 +126,55 @@ class Resize(object):
         return resize(sample, self.size, self.interpolation, self.max_size, self.antialias)
 
 
-class Cutout(object):
-    """Randomly mask out one or more patches from an image.
+import numpy as np
+from PIL import Image
 
-    Args:
-        n_holes (int): Number of patches to cut out of each image.
-        length (int): The length (in pixels) of each square patch.
-    """
+class Cutout(object):
     def __init__(self, n_holes, img_size, patch_size):
         self.n_holes = n_holes
-        self.length = img_size * patch_size
-        
+        self.length = int(img_size * patch_size)
 
-    def __call__(self, img):
+    def __call__(self, sample):
         """
         Args:
-            img (Tensor): Tensor image of size (C, H, W).
+            sample (dict): Dictionary containing 'image' and 'label'.
         Returns:
-            Tensor: Image with n_holes of dimension length x length cut out of it.
-        h = img.size(1)
-        w = img.size(2)
+            dict: Dictionary with Cutout applied to both 'image' and 'label'.
         """
-        _, h, w = F.get_dimensions(img)
+        img, label = sample['image'], sample['label']
+        
+        if isinstance(img, Image.Image):
+            img = np.array(img)
+        if isinstance(label, Image.Image):
+            label = np.array(label)
+        
+        h, w = img.shape[:2]
+        mask = np.ones((h, w), np.float32)
 
-        mask = np.ones((h, w), np.uint8)
-
-        for n in range(self.n_holes):
+        for _ in range(self.n_holes):
             y = np.random.randint(h)
             x = np.random.randint(w)
 
-            y1 = np.clip(y - self.length // 2, 0, h).astype(int)
-            y2 = np.clip(y + self.length // 2, 0, h).astype(int)
-            x1 = np.clip(x - self.length // 2, 0, w).astype(int)
-            x2 = np.clip(x + self.length // 2, 0, w).astype(int)
-            
-            mask[y1: y2, x1: x2] = 0
+            y1 = np.clip(y - self.length // 2, 0, h)
+            y2 = np.clip(y + self.length // 2, 0, h)
+            x1 = np.clip(x - self.length // 2, 0, w)
+            x2 = np.clip(x + self.length // 2, 0, w)
 
-        if torch.is_tensor(img):
-            mask = torch.from_numpy(mask)      
-            mask = mask.expand_as(img)
+            mask[y1:y2, x1:x2] = 0
 
-        else:
-            mask = mask[:,:,np.newaxis]
-            mask = np.tile(mask, 3)
- 
+        if img.ndim == 3:
+            mask = np.expand_dims(mask, axis=2)
+            mask = np.repeat(mask, img.shape[2], axis=2)
+        
         img = img * mask
+        label = label * mask[:,:,0]  # ラベルは2次元なので、maskの1チャンネルだけを使用
 
-        return Image.fromarray(img)
+        if isinstance(img, np.ndarray):
+            img = Image.fromarray(img.astype(np.uint8))
+        if isinstance(label, np.ndarray):
+            label = Image.fromarray(label.astype(np.uint8))
+
+        return {'image': img, 'label': label}
     
 def solarize_add(image, addition=0, threshold=128):
     image_array = np.array(image, dtype=np.int64)
