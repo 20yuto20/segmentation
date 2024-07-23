@@ -74,8 +74,8 @@ def make_datapath_list(path_2012, path_2007):
 
     # 訓練と検証、それぞれのファイルのID（ファイル名）を取得する
     # ここにどのデータがtrainでどれがvalか書いてある
-    train_id_names = osp.join(path_2012 + 'ImageSets/Segmentation/train.txt')
-    val_id_names = osp.join(path_2012 + 'ImageSets/Segmentation/val.txt')
+    train_id_names = osp.join(path_2012 + 'split/train.txt')
+    val_id_names = osp.join(path_2012 + 'split/val.txt')
     test_id_names = osp.join(path_2007 + 'ImageSets/Segmentation/test.txt')
 
     # 訓練データの画像ファイルとアノテーションファイルへのパスリストを作成
