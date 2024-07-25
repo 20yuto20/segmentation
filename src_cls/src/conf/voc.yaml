@@ -1,0 +1,111 @@
+default:
+  env: "cotton"
+  seed: 105
+  output_dir: "output_cls"
+  home_dir: null
+  dataset_dir: "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/"
+  deterministic: False
+  parallel: False
+  device_id: 0
+  num_workers: 8
+  num_excute: 4
+  make_dir: True
+  add_filename: null
+
+
+network:
+  name: "resnet50"
+  pretrained: False
+  dropout_rate: 0.3
+
+
+learn:
+  n_epoch: 100
+  batch_size: 32
+
+
+augment: 
+  name: 
+   - rcrop
+  hp:
+    rcrop_pad: 237
+    # 画像サイズが475なことから
+    # min: 475*0.5 = 237.5
+    # max: 475*2 = 950
+    # maxと元の画像の差: 950-475 = 475
+    # 475/2 = 237.5
+    # よって237pix
+
+    cutout_p: 0.5
+    cutout_size: 0.5
+    ra_p: 1.0
+    
+  ra:
+    space: "ra"
+    weight: single # 第一段階ではsingle
+    single: Contrast # 第一段階では特定のDA選択
+    num_op: 2
+    magnitude:  14
+    random_magnitude: True
+    softmax_t: 0.5
+    affinity_path: null
+    fix_iden: True
+    init_epoch: 20
+    warmup_ra: False
+    aff_calc: False
+    aff_model: null
+
+  
+dataset:
+  name: "voc" 
+  n_class: 20
+  img_size: 224
+  resized_size: 224
+  train_size: null
+  mean:
+    - 0.485
+    - 0.456
+    - 0.406
+  std: 
+    - 0.229
+    - 0.224
+    - 0.225
+  ignore_label: 255
+  
+
+optimizer:
+  name: SGD
+  scheduler:
+    name: cosine
+    step:
+      - 60
+      - 120
+      - 160
+    power: 0.9
+
+  loss: 
+    name: "ce"
+    aux_weight: 0.4
+    
+  hp:
+    lr: 0.01
+    lr_min: 0.0001
+    warmup_period: null
+    warmup_init: 1e-5
+    momentum: 0.9
+    weight_decay: 1e-4
+    
+save:
+  img: True
+  plot: True
+  selected: True
+  affinity: False
+  affinity_all: False
+  interval: null
+
+
+
+
+
+
+
