@@ -185,7 +185,7 @@ def _apply_op(
         # ラベルには適用しない
     # FIXME: NOT applied
     elif op_name == "Invert":
-        img = F.invert(img)
+        img = ImageOps.invert(img) # Using ImageOps instead of Pytorch just in case for debugging
         # ラベルには適用しない
     elif op_name == "Identity":
         pass
