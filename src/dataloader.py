@@ -12,8 +12,7 @@ from pathlib import Path
 from augment import Cutout, Normalize, ToTensor, Normalize_Tensor, RandomCrop
 from ra import RandAugmentSegmentation
 from load_dataset.city import MYDataset
-from load_dataset.voc import VOCDataset, make_datapath_list
-
+from load_dataset.voc import VOCDataset, datapath_list
 # cfg.default.dataset_dir :  (SGE_LOCAL_DIR) + dataset/
 
 
@@ -37,15 +36,21 @@ def get_dataloader(cfg):
         # path_2007 = "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/VOC2007"
 
         # abciで回すために少し変えました．
-        path_2012 = cfg.default.dataset_dir + "VOCSBD/"
-        path_2007 = cfg.default.dataset_dir + "VOC2007/VOCdevkit/VOC2007/"
+        # path_2012 = cfg.default.dataset_dir + "VOCSBD/"
+        # path_2007 = cfg.default.dataset_dir + "VOC2007/VOCdevkit/VOC2007/"
+        
+        path_train = cfg.default.dataset_dir + "train_aug/"
+        path_val = cfg.default.dataset_dir + "val/"
+        path_test = cfg.default.dataset_dir + "test/"
 
-        print(f"load data from : {path_2007}")
+        print(f"load train from : {path_train} \n load validation from : {path_val} \n load test from : {path_test}")
 
-        train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list = make_datapath_list(
-            path_2012=path_2012,
-            path_2007=path_2007
+        train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list = datapath_list(
+            path_train=path_train,
+            path_val=path_val,
+            path_test=path_test
             )
+        
         
         train_dataset = VOCDataset(train_img_list, train_anno_list, phase="train", transform=train_transform, img_size=cfg.dataset.resized_size)
         val_dataset = VOCDataset(val_img_list, val_anno_list, phase="val", transform=val_transform, img_size=cfg.dataset.resized_size)

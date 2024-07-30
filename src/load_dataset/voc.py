@@ -113,6 +113,53 @@ def make_datapath_list(path_2012, path_2007):
 
     return train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list
 
+def datapath_list(path_train, path_val, path_test):
+    train_imgpath_template = osp.join(path_train, 'image','%s.jpg')
+    val_imgpath_template = osp.join(path_val, 'image','%s.jpg')
+    test_imgpath_template = osp.join(path_test, 'image', '%s.jpg')
+    
+    train_annopath_template = osp.join(path_train, 'label', '%s.png')
+    val_annopath_template = osp.join(path_val, 'label', '%s.png')
+    test_annopath_template = osp.join(path_test, 'label', '%s.png')
+    
+    train_id_names = osp.join(path_train + 'trainaug.txt')
+    val_id_names = osp.join(path_val + 'val.txt')
+    test_id_names = osp.join(path_test + 'test.txt') 
+    
+    # 訓練データの画像ファイルとアノテーションファイルへのパスリストを作成
+    train_img_list = list()
+    train_anno_list = list()
+
+    for line in open(train_id_names):
+        file_id = line.strip()  # 空白スペースと改行を除去
+        img_path = (train_imgpath_template % file_id)  # 画像のパス
+        anno_path = (train_annopath_template % file_id)  # アノテーションのパス
+        train_img_list.append(img_path)
+        train_anno_list.append(anno_path)
+
+    # 検証データの画像ファイルとアノテーションファイルへのパスリストを作成
+    val_img_list = list()
+    val_anno_list = list()
+
+    for line in open(val_id_names):
+        file_id = line.strip()  # 空白スペースと改行を除去
+        img_path = (val_imgpath_template % file_id)  # 画像のパス
+        anno_path = (val_annopath_template % file_id)  # アノテーションのパス
+        val_img_list.append(img_path)
+        val_anno_list.append(anno_path)
+
+    # テストデータの画像ファイルとアノテーションファイルへのパスリストを作成
+    test_img_list = list()
+    test_anno_list = list()
+
+    for line in open(test_id_names):
+        file_id = line.strip()
+        img_path = (test_imgpath_template % file_id)
+        anno_path = (test_annopath_template % file_id)
+        test_img_list.append(img_path)
+        test_anno_list.append(anno_path)
+        
+    return train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list
 
 
 # TODO: testにも対応した仕様に変更する

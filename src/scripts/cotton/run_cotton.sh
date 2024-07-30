@@ -13,11 +13,11 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=111
+seed=121
 python main.py voc \
     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/vocsbd/" \
-    default.seed=111 \
-    learn.n_epoch=330 \
+    default.seed=$seed \
+    learn.n_epoch=250 \
     augment.name=["ra"] \
     augment.ra.weight="single" \
     augment.ra.single="ShearX"

@@ -9,7 +9,6 @@ import time
 import pandas as pd
 
 from set_cfg import setup_config, add_config
-# from model.segnet import SegNet
 from evalator import Evaluator
 from dataloader import get_dataloader
 from train_val import train, val, test
@@ -85,35 +84,38 @@ def main(cfg):
 
     train_loader, val_loader, test_loader = get_dataloader(cfg)
 
-    # Visualize samples from train and validation sets
-    visualize_samples(train_loader)
-    visualize_samples(val_loader)
-
-    evaluator = Evaluator(cfg.dataset.n_class, cfg.dataset.ignore_label)
+    evaluator = Evaluator(cfg.dataset.n_class)
 
     all_training_result = []
     start_time = time.time()
     best_miou = 0.0
 
     for epoch in range(1, cfg.learn.n_epoch+1):
-        evaluator.reset()
         train_progress_bar = tqdm.tqdm(train_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Train]')
-        loss = train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch)
+        train_loss, train_mIoU, train_Acc = train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch)
     
         val_progress_bar = tqdm.tqdm(val_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Val]')
-        mIoU, Acc = val(device, model, val_progress_bar, criterion, evaluator)
+        val_mIoU, val_Acc = val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch)
 
-        all_training_result.append({"epoch": epoch, "train_loss": loss, "val_mIoU": mIoU, "val_acc": Acc})
+        all_training_result.append({
+            "epoch": epoch, 
+            "train_loss": train_loss, 
+            "train_mIoU": train_mIoU, 
+            "train_acc": train_Acc,
+            "val_mIoU": val_mIoU, 
+            "val_acc": val_Acc
+        })
 
         epoch_end_time = time.time()
         total_duration = get_time(epoch_end_time - start_time)
 
         print(f"{total_duration}, lr : {optimizer.param_groups[0]['lr']}")
-        print(f"Epoch: {epoch}, Loss: {loss:.4f}, Accuracy: {Acc:.4f}, mIoU: {mIoU:.4f}")
+        print(f"Epoch: {epoch}, Loss: {train_loss:.4f}, Train Accuracy: {train_Acc:.4f}, Train mIoU: {train_mIoU:.4f}")
+        print(f"Val Accuracy: {val_Acc:.4f}, Val mIoU: {val_mIoU:.4f}")
         print("-" * 80)
 
-        if mIoU > best_miou:
-            best_miou = mIoU
+        if val_mIoU > best_miou:
+            best_miou = val_mIoU
             print(f"New best mIoU: {best_miou}. Saving model...")
             save_learner(cfg, model, device, True)
             
@@ -126,7 +128,7 @@ def main(cfg):
     best_model_path = cfg.out_dir + "weights/best.pth"
     model.load_state_dict(torch.load(best_model_path))
 
-    test_mIoU, test_Acc = test(cfg, device, model, test_loader, criterion, evaluator)
+    test_mIoU, test_Acc = test(cfg, device, model, test_loader, criterion)
     print(f"Final Test Results - Test Accuracy: {test_Acc:.4f}, Test mIoU: {test_mIoU:.4f}")
     
     test_result = {"test_mIoU": test_mIoU, "test_Acc": test_Acc}
@@ -142,7 +144,7 @@ def main(cfg):
     print(f"Train results saved to: {cfg.out_dir}train_output.csv")
     print(f"Test results saved to: {cfg.out_dir}test_output.csv")
 
-    add_config(cfg, {"test_acc": float(test_Acc)})
+    add_config(cfg, {"test_acc": float(test_Acc), "test_mIoU": float(test_mIoU)})
     add_config(cfg, {"total_training_time": str(total_training_time['time'])})
 
 if __name__ == "__main__":
