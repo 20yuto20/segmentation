@@ -17,10 +17,6 @@ from load_dataset.voc import VOCDataset, datapath_list
 
 
 def get_dataloader(cfg):
-    cur_dir = Path(__file__).parent.parent
-    dataset_name = cfg.dataset.name
-    dataset_path = str(cur_dir / "dataset" / dataset_name)
-    
     train_transform = get_composed_transform(cfg, "train")
     val_transform = get_composed_transform(cfg, "val")
     test_transform = get_composed_transform(cfg, "test")

@@ -103,8 +103,10 @@ save:
   affinity_all: False
   interval: null
 
-
-
+test:
+  test_dataset: /hoge/fuga
+  best_model: /hoge/hoge/fuga/fuga
+  result_dir: /hoge/hoge/fuga/fuga
 
 
 

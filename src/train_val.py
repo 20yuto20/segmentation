@@ -56,8 +56,8 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
         intersection, union, target = intersection.cpu().numpy(), union.cpu().numpy(), target.cpu().numpy()
         intersection_meter.update(intersection), union_meter.update(union), target_meter.update(target)
 
-        if epoch % 50 == 0 and i == 0:  # Visualize first batch every 50 epochs
-            visualize_results(cfg, epoch, image, label, pred, 'train')
+        # if epoch % 50 == 0 and i == 0:  # Visualize first batch every 50 epochs
+        #     visualize_results(cfg, epoch, image, label, pred, 'train')
 
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10)
     mIoU = np.mean(iou_class)
