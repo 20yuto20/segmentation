@@ -15,11 +15,11 @@ cd $WORKDIR
 
 
 
-seed=111
+seed=112
 python main.py  voc \
     default.seed=$seed \
-    augment.name=["hflip","rcrop","cutout"] \
-    learn.n_epoch=3 \
-    augment.hp.cutout_p=1.0 \
-    augment.hp.rcrop_pad=14
+    learn.n_epoch=30 \
+    augment.name=["ra"] \
+    augment.ra.weight="single" \
+    augment.ra.single="ShearX"
 

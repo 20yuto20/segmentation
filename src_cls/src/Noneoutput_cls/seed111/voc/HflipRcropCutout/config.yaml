@@ -91,4 +91,6 @@ override_cmd:
 - learn.n_epoch=3
 - augment.hp.cutout_p=1.0
 - augment.hp.rcrop_pad=14
-datetime: '2024-07-31 03:53:54.398004'
+datetime: '2024-07-31 04:45:40.874819'
+test_acc: 0.9229401350021362
+time: 0h 1m 37s

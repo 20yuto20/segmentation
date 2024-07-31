@@ -29,15 +29,7 @@ from utils.common import (
     lr_step
 )
 
-# 　　$ watch -n 1 nvidia-smi
-#　　 pytorch omegaconf matplotlib pandas
-#　
-#　nohup bash /home/park/code/rand/src/scripts/rand.sh > /home/park/code/rand/comi/12051248.log 2>&1 &
-
-# single, w_ra
-
 print("giselle")
-
 
 def main(cfg):
     # if single-pass, set cfg for init phase
@@ -54,7 +46,6 @@ def main(cfg):
     if cfg.augment.ra.aff_calc:
         get_affinity_init(cfg, device)
 
-    
     model = suggest_network(cfg)
     model.to(device)
 
@@ -78,7 +69,13 @@ def main(cfg):
         train_loss, train_acc = train(model, device, train_loader, optimizer, loss_func)
         val_loss, val_acc, val_mAP = val(model, device, val_loader, loss_func)
 
-        all_training_result.append([train_loss, train_acc, val_loss, val_acc, val_mAP])
+        all_training_result.append([
+            train_loss.cpu().item() if isinstance(train_loss, torch.Tensor) else train_loss,
+            train_acc.cpu().item() if isinstance(train_acc, torch.Tensor) else train_acc,
+            val_loss.cpu().item() if isinstance(val_loss, torch.Tensor) else val_loss,
+            val_acc.cpu().item() if isinstance(val_acc, torch.Tensor) else val_acc,
+            val_mAP.cpu().item() if isinstance(val_mAP, torch.Tensor) else val_mAP
+        ])
         interval = time.time() - start
         interval = get_time(interval)
         print(f"Lr: {optimizer.param_groups[0]['lr']} , time: {interval['time']}")
@@ -104,7 +101,6 @@ def main(cfg):
 
         # if affinity at each epoch calc
         elif cfg.save.affinity_all and epoch % 2 == 0:
-        #elif cfg.save.affinity_all:
             affinity_df = aff.calculate_affinity(model, val_acc, epoch, affinity_df)
             affinity_df.to_csv(affinity_path, index=False)
         
@@ -116,17 +112,25 @@ def main(cfg):
         save_learner(cfg, model, device, False)
 
         scheduler.step()
-        # lr_step(cfg, scheduler, epoch)
 
-    
     all_training_result = pd.DataFrame(
-        np.array(all_training_result),
-        columns=["train_loss", "train_acc", "val_loss", "val_acc"],
+        all_training_result,
+        columns=["train_loss", "train_acc", "val_loss", "val_acc", "val_mAP"]
     )
+    
+    print("all_training_result type:", type(all_training_result))
+    print("all_training_result first row:", all_training_result.iloc[0])
+
     interval = time.time() - start
-    interval = get_time (interval)
+    interval = get_time(interval)
 
     test_loss, test_acc, test_mAP = test(model, device, test_loader, loss_func, cfg)
+
+    # GPUテンソルをCPUに移動し、Pythonのネイティブ型に変換
+    test_loss = test_loss.cpu().item() if isinstance(test_loss, torch.Tensor) else test_loss
+    test_acc = test_acc.cpu().item() if isinstance(test_acc, torch.Tensor) else test_acc
+    test_mAP = test_mAP.cpu().item() if isinstance(test_mAP, torch.Tensor) else test_mAP
+
     print(
         f"time: {interval['time']} \t"
         +f"test loss: {test_loss:.6f} \t"
@@ -134,9 +138,19 @@ def main(cfg):
         +f"test mAP: {test_mAP:.6f} \t"
     )
 
-    all_training_result.loc["test_acc"] = test_acc
-    all_training_result.loc["test_loss"] = test_loss
-    all_training_result.loc["test_mAP"] = test_mAP
+    # DataFrameに新しい行を追加
+    new_row = pd.DataFrame({
+        "train_loss": [np.nan],
+        "train_acc": [np.nan],
+        "val_loss": [np.nan],
+        "val_acc": [np.nan],
+        "val_mAP": [np.nan],
+        "test_loss": [test_loss],
+        "test_acc": [test_acc],
+        "test_mAP": [test_mAP]
+    })
+    all_training_result = pd.concat([all_training_result, new_row], ignore_index=True)
+    all_training_result.to_csv(save_file_path, index=False)
     
     add_config(cfg, {"test_acc" : test_acc})
     add_config(cfg, interval)
@@ -153,10 +167,6 @@ def main(cfg):
     if cfg.save.selected and os.path.exists(cfg.out_dir + f"selected_method_{cfg.augment.ra.weight}.csv"):
         plot_selected(cfg)
 
-
-
 if __name__ == "__main__":
     cfg = setup_config()
     main(cfg)
-
-
