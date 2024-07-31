@@ -5,7 +5,7 @@ import copy
 import torch
 from torch.utils.data import DataLoader
 
-from dataloader import get_composed_transform, DatasetLoader
+from dataloader import get_composed_transform, VOCDatasetLoader
 from randaugment import RandAugment
 from train_val import accuracy
 from utils.suggest import suggest_network
@@ -30,7 +30,7 @@ class Affinity():
         for key in self.ra_space_dict:
             self.cfg.augment.ra.single = key
             aug_trans = get_composed_transform(self.cfg, "train")
-            aug_dataset = DatasetLoader(dataset_path, "val", self.cfg.dataset.resized_size, aug_trans)
+            aug_dataset = VOCDatasetLoader(dataset_path, "val", self.cfg.dataset.resized_size, aug_trans)
             aug_loader = DataLoader(
                 aug_dataset,
                 batch_size=self.cfg.learn.batch_size,
@@ -94,7 +94,7 @@ class Affinity():
     def get_orig_val_acc(self, model):
         dataset_path = f"{self.cfg.default.dataset_dir}"+ f"{self.cfg.dataset.name}" 
         orig_trans = get_composed_transform(self.cfg, "test")
-        orig_dataset = DatasetLoader(dataset_path, "val", self.cfg.dataset.resized_size, orig_trans)
+        orig_dataset = VOCDatasetLoader(dataset_path, "val", self.cfg.dataset.resized_size, orig_trans)
         orig_loader = DataLoader(
             orig_dataset,
             batch_size=self.cfg.learn.batch_size,

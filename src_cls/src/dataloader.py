@@ -86,7 +86,7 @@ def get_dataloader(cfg):
     def worker_init_fn(worker_id):
         random.seed(worker_id+cfg.default.seed)
 
-    dataset_path = f"{cfg.default.dataset_dir}"+ f"{cfg.dataset.name}" 
+    dataset_path = f"{cfg.default.dataset_dir}"
 
     train_transform = get_composed_transform(cfg, "train")
     test_transform = get_composed_transform(cfg, "test")
@@ -231,7 +231,7 @@ def val_loader_transform(cfg):
 
     dataset_path = f"{cfg.default.dataset_dir}"+ f"{cfg.dataset.name}" 
     # use train_transform for val dataset
-    val_dataset = DatasetLoader(dataset_path, "val", cfg.dataset.resized_size, test_transform)
+    val_dataset = VOCDatasetLoader(dataset_path, "val", cfg.dataset.resized_size, test_transform)
 
     val_loader = DataLoader(
         val_dataset,
