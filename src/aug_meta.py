@@ -231,6 +231,11 @@ def _apply_op(
         cutout = Cutout(n_holes=1, img_size=min(height, width), patch_size=magnitude)
         sample = cutout({'image': img, 'label': label})
         img, label = sample['image'], sample['label']
+    elif op_name == "Cutout_img":
+        _, height, width = F.get_dimensions(img)
+        cutout = Cutout(n_holes=1, img_size=min(height, width), patch_size=magnitude)
+        sample = cutout({'image' : img})
+        img = sample['image']
     elif op_name == "SolarizeAdd":
         img = solarize_add(image=img, addition=int(magnitude), threshold=128)
         # ラベルには適用しない
