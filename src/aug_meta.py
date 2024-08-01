@@ -231,7 +231,7 @@ def _apply_op(
         cutout = Cutout(n_holes=1, img_size=min(height, width), patch_size=magnitude)
         sample = cutout({'image': img, 'label': label})
         img, label = sample['image'], sample['label']
-    elif op_name == "Cutout_img":
+    elif op_name == "Cutout_img": # Labelには適応させずに画像だけ適応させる
         _, height, width = F.get_dimensions(img)
         cutout = Cutout(n_holes=1, img_size=min(height, width), patch_size=magnitude)
         sample = cutout({'image' : img})
