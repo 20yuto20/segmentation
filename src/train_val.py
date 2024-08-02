@@ -27,13 +27,10 @@ def visualize_results(cfg, epoch, image, label, pred, phase):
         plt.savefig(os.path.join(debug_dir, f"debug_sample_epoch{epoch}_{phase}_sample{j}.png"))
         plt.close()
 
-def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
+def train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluator, epoch):
     model.train()
-    n_train = 0
-    sum_loss = 0.0
-    intersection_meter = AverageMeter()
-    union_meter = AverageMeter()
-    target_meter = AverageMeter()
+    evaluator.reset()
+    loss_meter = AverageMeter()
 
     for i, sample in enumerate(train_progress_bar):
         image, label = sample['image'].to(device), sample['label'].to(device)
@@ -43,27 +40,25 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
         
         y = model(image)
         loss = criterion(y, label.long())
+        
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        sum_loss += loss.item()
-        n_train += image.size(0)
+
+        # メトリクスの計算
+        pred = get_pred(y)
+        evaluator.add_batch(pred, label)
+        
+        loss_meter.update(loss.item(), image.size(0))
         train_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-        # Calculate mIoU
-        pred = get_pred(y)
-        intersection, union, target = intersectionAndUnionGPU(pred, label, cfg.dataset.n_class, cfg.dataset.ignore_label)
-        intersection, union, target = intersection.cpu().numpy(), union.cpu().numpy(), target.cpu().numpy()
-        intersection_meter.update(intersection), union_meter.update(union), target_meter.update(target)
+        if epoch % 50 == 0 and i == 0:
+            visualize_results(cfg, epoch, image, label, pred, 'train')
 
-        # if epoch % 50 == 0 and i == 0:  # Visualize first batch every 50 epochs
-        #     visualize_results(cfg, epoch, image, label, pred, 'train')
+    mIoU = evaluator.Mean_Intersection_over_Union()
+    Acc = evaluator.Pixel_Accuracy()
 
-    iou_class = intersection_meter.sum / (union_meter.sum + 1e-10)
-    mIoU = np.mean(iou_class)
-    allAcc = sum(intersection_meter.sum) / (sum(target_meter.sum) + 1e-10)
-
-    return sum_loss / n_train, mIoU, allAcc
+    return loss_meter.avg, mIoU, Acc
 
 def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
     model.eval()

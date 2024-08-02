@@ -13,11 +13,12 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=121
+seed=51
 python main.py voc \
     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc_aug/" \
     default.seed=$seed \
-    learn.n_epoch=250 \
+    learn.n_epoch=3 \
     augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="Cutout"
+    augment.ra.single="Cutout" \
+    && python notify.py 1 || python notify.py 0

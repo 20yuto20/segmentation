@@ -92,7 +92,7 @@ def main(cfg):
 
     for epoch in range(1, cfg.learn.n_epoch+1):
         train_progress_bar = tqdm.tqdm(train_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Train]')
-        train_loss, train_mIoU, train_Acc = train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch)
+        train_loss, train_mIoU, train_Acc = train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluator, epoch)
     
         val_progress_bar = tqdm.tqdm(val_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Val]')
         val_mIoU, val_Acc = val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch)

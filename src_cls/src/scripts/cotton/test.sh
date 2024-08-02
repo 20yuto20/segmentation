@@ -13,13 +13,11 @@ echo "ok"
 
 cd $WORKDIR
 
-
-
 seed=112
-python main.py  voc \
+python main.py voc \
     default.seed=$seed \
-    learn.n_epoch=30 \
+    learn.n_epoch=1 \
     augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="ShearX"
-
+    augment.ra.single="ShearX" \
+    && python notify.py 1 || python notify.py 0

@@ -2,7 +2,7 @@ default:
   env: "cotton"
   seed: 105
   output_dir: "output_cls"
-  home_dir: null
+  home_dir: "/homes/ykohata/code/devml/homes/ypark/code/seg/"
   dataset_dir: "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/"
   deterministic: False
   parallel: False
@@ -50,7 +50,7 @@ augment:
     softmax_t: 0.5
     affinity_path: null
     fix_iden: True
-    init_epoch: 20
+    init_epoch: 1000
     warmup_ra: False
     aff_calc: False
     aff_model: null

@@ -11,7 +11,7 @@ from dataloader import get_dataloader
 from train_val import train, val, test
 from set_cfg import setup_config, add_config
 from randaugment import reset_cfg
-from affinity import Affinity, get_affinity_init
+# from affinity import Affinity, get_affinity_init
 from utils.suggest import (
     setup_device,
     fixed_r_seed,
@@ -43,8 +43,8 @@ def main(cfg):
     device = setup_device(cfg)
     fixed_r_seed(cfg)
 
-    if cfg.augment.ra.aff_calc:
-        get_affinity_init(cfg, device)
+    # if cfg.augment.ra.aff_calc:
+    #     get_affinity_init(cfg, device)
 
     model = suggest_network(cfg)
     model.to(device)
@@ -54,17 +54,17 @@ def main(cfg):
     scheduler = suggest_scheduler(cfg, optimizer)
     loss_func = suggest_loss_func()
 
-    # if need affinity calc, prepare csv path and instance 
-    if cfg.save.affinity or cfg.save.affinity_all:
-        affinity_path = (cfg.out_dir + "affinity.csv")
-        aff = Affinity(cfg, device)
+    # # if need affinity calc, prepare csv path and instance 
+    # if cfg.save.affinity or cfg.save.affinity_all:
+    #     affinity_path = (cfg.out_dir + "affinity.csv")
+    #     aff = Affinity(cfg, device)
         
     print(OmegaConf.to_yaml(cfg))
     start = time.time()
     best_acc = 1e-8
     save_file_path = cfg.out_dir + "output.csv"
     all_training_result = []
-    affinity_df = pd.DataFrame()
+    # affinity_df = pd.DataFrame()
     for epoch in range(1, cfg.learn.n_epoch + 1):
         train_loss, train_acc = train(model, device, train_loader, optimizer, loss_func)
         val_loss, val_acc, val_mAP = val(model, device, val_loader, loss_func)
@@ -88,23 +88,24 @@ def main(cfg):
         )
         sys.stdout.flush()
 
-        # if init phase end
-        if cfg.augment.ra.init_epoch is not None and epoch == cfg.augment.ra.init_epoch:
-            # for single-pass calc Affinity using the model at that epoch
-            affinity_df = aff.get_all_affinity(model, affinity_df)
-            affinity_df.to_csv(affinity_path, index=False)
-            # start main phase, change dataloader for RA
-            cfg = reset_cfg(cfg, init=False)
-            print("Switch to new data loader ...")
-            del train_loader
-            train_loader, _, _ = get_dataloader(cfg)
+        # # if init phase end
+        # if cfg.augment.ra.init_epoch is not None and epoch == cfg.augment.ra.init_epoch:
+        #     # for single-pass calc Affinity using the model at that epoch
+        #     affinity_df = aff.get_all_affinity(model, affinity_df)
+        #     affinity_df.to_csv(affinity_path, index=False)
+        #     # start main phase, change dataloader for RA
+        #     cfg = reset_cfg(cfg, init=False)
+        #     print("Switch to new data loader ...")
+        #     del train_loader
+        #     train_loader, _, _ = get_dataloader(cfg)
 
-        # if affinity at each epoch calc
-        elif cfg.save.affinity_all and epoch % 2 == 0:
-            affinity_df = aff.calculate_affinity(model, val_acc, epoch, affinity_df)
-            affinity_df.to_csv(affinity_path, index=False)
+        # # if affinity at each epoch calc
+        # elif cfg.save.affinity_all and epoch % 2 == 0:
+        #     affinity_df = aff.calculate_affinity(model, val_acc, epoch, affinity_df)
+        #     affinity_df.to_csv(affinity_path, index=False)
         
         # save best weight
+        # TODO: multilabelではどの評価指標をもとに重み付けをするか
         if best_acc < val_acc:
             best_acc = val_acc
             save_learner(cfg, model, device, True)
@@ -156,9 +157,9 @@ def main(cfg):
     add_config(cfg, interval)
     plot_log(cfg, all_training_result)
 
-    if cfg.save.affinity:
-        affinity_df = aff.calculate_affinity(model, val_acc, epoch, affinity_df)
-        affinity_df.to_csv(affinity_path, index=False)
+    # if cfg.save.affinity:
+    #     affinity_df = aff.calculate_affinity(model, val_acc, epoch, affinity_df)
+    #     affinity_df.to_csv(affinity_path, index=False)
 
     # if abci move files from SGE_LOCALDIR
     if cfg.default.env == "abci":
