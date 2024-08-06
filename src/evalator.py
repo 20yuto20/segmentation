@@ -35,7 +35,12 @@ class Evaluator(object):
         MIoU = MIoU.cpu().numpy()
         return np.mean(MIoU)
 
+    # def Pixel_Accuracy(self):
+    #     Acc = torch.sum(self.total_area_inter) / (torch.sum(self.total_area_label) + 1e-10)
+    #     Acc = Acc.cpu().numpy()
+    #     return Acc
+    
     def Pixel_Accuracy(self):
-        Acc = torch.sum(self.total_area_inter) / (torch.sum(self.total_area_label) + 1e-10)
+        Acc = torch.sum(self.total_area_inter) / (torch.sum(self.total_area_pred) + 1e-10)
         Acc = Acc.cpu().numpy()
         return Acc

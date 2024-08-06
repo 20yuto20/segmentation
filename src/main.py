@@ -11,7 +11,7 @@ import pandas as pd
 from set_cfg import setup_config, add_config
 from evalator import Evaluator
 from dataloader import get_dataloader
-from train_val import train, val
+from train_val import train, val, test
 from utils.common import (
     setup_device,
     fixed_r_seed,
@@ -82,7 +82,7 @@ def main(cfg):
     criterion = suggest_loss_func(cfg)
     criterion.to(device)
 
-    train_loader, val_loader, _ = get_dataloader(cfg)
+    train_loader, val_loader, test_loader = get_dataloader(cfg)
 
     evaluator = Evaluator(cfg.dataset.n_class)
 
@@ -124,12 +124,27 @@ def main(cfg):
     end_time = time.time()
     total_training_time = get_time(end_time - start_time)
     print(f"Total training {total_training_time}")
+    
+    best_model_path = cfg.out_dir + "weights/best.pth"
+    model.load_state_dict(torch.load(best_model_path))
+
+    test_mIoU, test_Acc = test(cfg, device, model, test_loader, criterion)
+    print(f"Final Test Results - Test Accuracy: {test_Acc:.4f}, Test mIoU: {test_mIoU:.4f}")
+
+    test_result = {"test_mIoU": test_mIoU, "test_Acc": test_Acc}
 
     if len(all_training_result) > 0:
         train_df = pd.DataFrame(all_training_result)
         train_df.to_csv(cfg.out_dir + "train_output.csv", index=False)
         plot_log(cfg, train_df)
 
+    test_df = pd.DataFrame([test_result])
+    test_df.to_csv(cfg.out_dir + "test_output.csv", index=False)
+
+    print(f"Train results saved to: {cfg.out_dir}train_output.csv")
+    print(f"Test results saved to: {cfg.out_dir}test_output.csv")
+
+    add_config(cfg, {"test_acc": float(test_Acc), "test_mIoU": float(test_mIoU)})
     add_config(cfg, {"total_training_time": str(total_training_time['time'])})
 
 if __name__ == "__main__":

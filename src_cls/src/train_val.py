@@ -5,7 +5,7 @@ from sklearn.metrics import average_precision_score
 import numpy as np
 
 def accuracy(output, target):
-    pred = (output > 0).float()
+    pred = (output > 0.5).float()
     correct = (pred == target).float().sum()
     return correct / (target.size(0) * target.size(1))
 
@@ -24,7 +24,7 @@ def train(model, device, train_loader, optimizer, criterion):
         optimizer.step()
         
         train_loss += loss.item() * data.size(0)
-        train_acc += accuracy(output, target) * data.size(0)
+        train_acc += accuracy(output, target) # * data.size(0)
         n_samples += data.size(0)
     
     return train_loss / n_samples, train_acc / n_samples
@@ -45,7 +45,7 @@ def val(model, device, val_loader, criterion):
             loss = criterion(output, target)
             
             val_loss += loss.item() * data.size(0)
-            val_acc += accuracy(output, target) * data.size(0)
+            val_acc += accuracy(output, target) # * data.size(0)
             n_samples += data.size(0)
             
             all_outputs.append(output.cpu().numpy())

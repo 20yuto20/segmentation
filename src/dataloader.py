@@ -37,7 +37,9 @@ def get_dataloader(cfg):
         
         path_train = cfg.default.dataset_dir + "train_aug/"
         path_val = cfg.default.dataset_dir + "val/"
-        path_test = cfg.default.dataset_dir + "test/"
+        # path_test = cfg.default.dataset_dir + "test/"
+        path_test = cfg.default.dataset_dir + "test_2007/"
+
 
         print(f"load train from : {path_train} \n load validation from : {path_val} \n load test from : {path_test}")
 

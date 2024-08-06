@@ -138,7 +138,7 @@ def suggest_scheduler(cfg, optimizer):
 
 
 def suggest_loss_func():
-    return nn.BCEWithLogitsLoss(reduction='sum')
+    return nn.BCEWithLogitsLoss(reduction='mean')
 
 
 
