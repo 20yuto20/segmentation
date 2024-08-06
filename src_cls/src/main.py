@@ -61,7 +61,7 @@ def main(cfg):
         
     print(OmegaConf.to_yaml(cfg))
     start = time.time()
-    best_acc = 1e-8
+    best_mAP = 0.0
     save_file_path = cfg.out_dir + "output.csv"
     all_training_result = []
     # affinity_df = pd.DataFrame()
@@ -106,8 +106,8 @@ def main(cfg):
         
         # save best weight
         # TODO: multilabelではどの評価指標をもとに重み付けをするか
-        if best_acc < val_acc:
-            best_acc = val_acc
+        if best_mAP < val_mAP:
+            best_mAP = val_mAP
             save_learner(cfg, model, device, True)
         # save latest epoch weight
         save_learner(cfg, model, device, False)
