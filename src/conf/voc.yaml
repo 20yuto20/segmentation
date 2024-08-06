@@ -7,7 +7,7 @@ default:
   deterministic: False
   parallel: False
   device_id: 0
-  num_workers: 8
+  num_workers: 16
   num_excute: 4
   make_dir: True
   add_filename: null

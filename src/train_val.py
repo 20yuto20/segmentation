@@ -81,7 +81,7 @@ def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
         evaluator.add_batch(pred, label)
         val_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-        if epoch % 50 == 0 and i == 0:  # Visualize first batch every 50 epochs
+        if epoch % 100 == 0 and i == 0:  # Visualize first batch every 100 epochs
             visualize_results(cfg, epoch, image, label, pred, 'val')
 
     mIoU = evaluator.Mean_Intersection_over_Union()
