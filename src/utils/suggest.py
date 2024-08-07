@@ -20,8 +20,15 @@ def suggest_network(cfg):
         model = SegNet(input_channels=3, output_channels=cfg.dataset.n_class)
     elif cfg.network.name == "pspnet":
         print("Selected network is a PSPNET!")
-        model = PSPNet(n_classes=cfg.dataset.n_class)
-
+        model = PSPNet(
+            layers=cfg.network.resenet_layers,
+            bins=(1, 2, 3, 6),
+            dropout=cfg.network.dropout_rate,
+            classes=cfg.dataset.n_class,
+            zoom_factor=cfg.network.zoom_factor,
+            use_ppm=cfg.network.use_ppm,
+            pretrained=cfg.network.pretrained  # ここを True に設定
+        )
     return model
 
 

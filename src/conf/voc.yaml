@@ -1,5 +1,5 @@
 default:
-  env: "cotton"
+  env: "abci"
   seed: 105
   output_dir: "output"
   home_dir: null
@@ -15,8 +15,12 @@ default:
 
 network:
   name: "pspnet"
-  pretrained: False
-  dropout_rate: 0.3
+  pretrained: True
+  dropout_rate: 0.1
+  zoom_factor: 8
+  use_ppm: True
+  resenet_layers: 50
+
 
 
 learn:
@@ -59,8 +63,8 @@ augment:
 dataset:
   name: "voc" 
   n_class: 21
-  img_size: 475
-  resized_size: 475
+  img_size: 465
+  resized_size: 465
   train_size: null
   mean: 
     - 0.485
@@ -103,10 +107,10 @@ save:
   affinity_all: False
   interval: null
 
-test:
-  test_dataset: /hoge/fuga
-  best_model: /hoge/hoge/fuga/fuga
-  result_dir: /hoge/hoge/fuga/fuga
+# test:
+#   test_dataset: /hoge/fuga
+#   best_model: /hoge/hoge/fuga/fuga
+#   result_dir: /hoge/hoge/fuga/fuga
 
 
 

@@ -29,13 +29,13 @@ cd $WORKDIR
 #     *) echo "Invalid task ID"; exit 1;;
 # esac
 
-seed=1
+seed=301
 
 python main.py voc \
     default.device_id=0 \
     default.dataset_dir="$SGE_LOCALDIR/dataset/voc_aug/" \
-    learn.n_epoch=1 \
-    learn.batch_size=10 \
+    learn.n_epoch=200 \
+    learn.batch_size=8 \
     default.seed=$seed \
     augment.name=["nan"] \
     augment.ra.weight="single" \

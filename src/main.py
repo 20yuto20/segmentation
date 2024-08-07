@@ -95,13 +95,14 @@ def main(cfg):
         train_loss, train_mIoU, train_Acc = train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluator, epoch)
     
         val_progress_bar = tqdm.tqdm(val_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Val]')
-        val_mIoU, val_Acc = val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch)
+        val_loss, val_mIoU, val_Acc = val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch)
 
         all_training_result.append({
             "epoch": epoch, 
             "train_loss": train_loss, 
             "train_mIoU": train_mIoU, 
             "train_acc": train_Acc,
+            "val_loss": val_loss,
             "val_mIoU": val_mIoU, 
             "val_acc": val_Acc
         })
@@ -110,8 +111,8 @@ def main(cfg):
         total_duration = get_time(epoch_end_time - start_time)
 
         print(f"{total_duration}, lr : {optimizer.param_groups[0]['lr']}")
-        print(f"Epoch: {epoch}, Loss: {train_loss:.4f}, Train Accuracy: {train_Acc:.4f}, Train mIoU: {train_mIoU:.4f}")
-        print(f"Val Accuracy: {val_Acc:.4f}, Val mIoU: {val_mIoU:.4f}")
+        print(f"Epoch: {epoch}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_Acc:.4f}, Train mIoU: {train_mIoU:.4f}")
+        print(f"Val Loss: {val_loss:.4f}, Val Accuracy: {val_Acc:.4f}, Val mIoU: {val_mIoU:.4f}")
         print("-" * 80)
 
         if val_mIoU > best_miou:
