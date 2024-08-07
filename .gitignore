@@ -2,9 +2,9 @@ __pycache__/
 dataset/
 output/
 *.out
-output/seed1/test/Nan/weights/best.pth
 comi/
 trash/
 output_cls/
 weights/
 Noneoutput_cls/
+initmodel/

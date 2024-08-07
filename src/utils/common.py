@@ -52,52 +52,38 @@ def get_time(interval):
 # plot loss and acc curve
 def plot_log(cfg, data):
     epochs = data['epoch']
-    fig, ax = plt.subplots(1, 2, figsize=(16, 9), dpi = 80)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 9), dpi=80)
     
-    ax[0].plot(epochs, data["train_loss"], label='Train', alpha=0.8, linewidth=5)
-    ax[0].set_title('Train Loss', fontsize=30)
-    ax[0].set_xlabel('Epochs', fontsize=25)
-    ax[0].set_ylabel('Loss', fontsize=25)
-    ax[0].legend(bbox_to_anchor=(1, 1), loc="upper right", borderaxespad=0.2, fontsize=30, ncol=1)
-    ax[0].tick_params(labelsize=25)
-    ax[0].grid()
+    # Loss plot
+    ax1.plot(epochs, data["train_loss"], label='Train Loss', alpha=0.8, linewidth=2, color='tab:blue')
+    ax1.plot(epochs, data["val_loss"], label='Val Loss', alpha=0.8, linewidth=2, color='tab:orange')
+    ax1.set_title('Loss', fontsize=30)
+    ax1.set_xlabel('Epochs', fontsize=25)
+    ax1.set_ylabel('Loss', fontsize=25)
+    ax1.legend(fontsize=20, loc='upper right')
+    ax1.tick_params(labelsize=20)
+    ax1.grid(True)
 
-    # ax[1].plot(epochs, data["val_mIoU"], label='mIoU', alpha=0.8, linewidth=5)
-    # ax[1].plot(epochs, data["val_acc"], label='acc', alpha=0.8, linewidth=5)
-    # ax[1].set_title('Validation', fontsize=30)
-    # ax[1].set_xlabel('Epochs', fontsize=25)
-    # ax[1].set_ylabel('Accuracy', fontsize=25)
-    # ax[1].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
-    # ax[1].tick_params(labelsize=25)
-    # ax[1].grid()
-
-    # ax[1].plot(epochs, data["val_mIoU"], label='mIoU', alpha=0.8, linewidth=5)
-    # ax[1].plot(epochs, data["val_acc"], label='acc', alpha=0.8, linewidth=5)
-    # ax[1].set_title('Validation', fontsize=30)
-    # ax[1].set_xlabel('Epochs', fontsize=25)
-    # ax[1].set_ylabel('Accuracy', fontsize=25)
-    # ax[1].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
-    # ax[1].tick_params(labelsize=25)
-    # ax[1].grid()
-
-    ax2 = ax[1].twinx()
-    ax[1].plot(epochs, data["val_mIoU"], label='mIoU', alpha=0.8, linewidth=5, color='tab:blue')
-    ax2.plot(epochs, data["val_acc"], label='acc', alpha=0.8, linewidth=5, color='tab:orange')
-
-    ax[1].set_title('Validation', fontsize=30)
-    ax[1].set_xlabel('Epochs', fontsize=25)
-    ax[1].set_ylabel('mIoU', fontsize=25, color='tab:blue')
-    ax2.set_ylabel('Accuracy', fontsize=25, color='tab:orange')
-
-    ax[1].tick_params(labelsize=25, axis='y', colors='tab:blue')
-    ax2.tick_params(labelsize=25, axis='y', colors='tab:orange')
-
-    h1, l1 = ax[1].get_legend_handles_labels()
-    h2, l2 = ax2.get_legend_handles_labels()
-    ax[1].legend(h1+h2, l1+l2, bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
-
+    # mIoU and Accuracy plot
+    ax2_1 = ax2
+    ax2_2 = ax2.twinx()
     
-    fig.suptitle(f"{cfg.out_dir}")
+    ax2_1.plot(epochs, data["val_mIoU"], label='mIoU', alpha=0.8, linewidth=2, color='tab:green')
+    ax2_2.plot(epochs, data["val_acc"], label='Accuracy', alpha=0.8, linewidth=2, color='tab:red')
+
+    ax2.set_title('Validation Metrics', fontsize=30)
+    ax2.set_xlabel('Epochs', fontsize=25)
+    ax2_1.set_ylabel('mIoU', fontsize=25, color='tab:green')
+    ax2_2.set_ylabel('Accuracy', fontsize=25, color='tab:red')
+
+    ax2_1.tick_params(labelsize=20, axis='y', colors='tab:green')
+    ax2_2.tick_params(labelsize=20, axis='y', colors='tab:red')
+
+    lines1, labels1 = ax2_1.get_legend_handles_labels()
+    lines2, labels2 = ax2_2.get_legend_handles_labels()
+    ax2.legend(lines1 + lines2, labels1 + labels2, fontsize=20, loc='lower right')
+
+    fig.suptitle(f"{cfg.out_dir}", fontsize=16)
     plt.tight_layout()
     plt.savefig(cfg.out_dir + "graph.png")
     plt.close()

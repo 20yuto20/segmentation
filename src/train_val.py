@@ -52,7 +52,7 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluato
         loss_meter.update(loss.item(), image.size(0))
         train_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-        if epoch % 50 == 0 and i == 0:
+        if epoch % 100 == 0 and i == 0:
             visualize_results(cfg, epoch, image, label, pred, 'train')
 
     mIoU = evaluator.Mean_Intersection_over_Union()
@@ -63,6 +63,7 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluato
 def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
     model.eval()
     evaluator.reset()
+    loss_meter = AverageMeter()
     
     for i, sample in enumerate(val_progress_bar):
         image, label = sample['image'].to(device), sample['label'].to(device)
@@ -76,6 +77,7 @@ def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
             y = model(image)
 
         loss = criterion(y, label)
+        loss_meter.update(loss.item(), image.size(0))
         pred = get_pred(y)
         
         evaluator.add_batch(pred, label)
@@ -87,7 +89,7 @@ def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
     mIoU = evaluator.Mean_Intersection_over_Union()
     Acc = evaluator.Pixel_Accuracy()
 
-    return mIoU, Acc
+    return loss_meter.avg, mIoU, Acc
 
 def test(cfg, device, model, test_loader, criterion):
     model.eval()
