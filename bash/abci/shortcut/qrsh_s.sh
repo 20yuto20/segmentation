@@ -8,7 +8,7 @@ resource_type="#$ -l rt_G.small=1"
 execution_time="#$ -l h_rt=02:00:00"
 
 # echoでオプションを出力
-echo "run qrsh with following conditions"
+echo "run qrsh-s with following conditions"
 echo "----------"
 echo "$group_name"
 echo "$resource_type"
