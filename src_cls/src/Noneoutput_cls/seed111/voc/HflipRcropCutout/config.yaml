@@ -1,0 +1,96 @@
+default:
+  env: cotton
+  seed: 111
+  output_dir: output_cls
+  home_dir: null
+  dataset_dir: /homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/
+  deterministic: false
+  parallel: false
+  device_id: 0
+  num_workers: 8
+  num_excute: 4
+  make_dir: true
+  add_filename: null
+network:
+  name: resnet50
+  pretrained: false
+  dropout_rate: 0.3
+learn:
+  n_epoch: 3
+  batch_size: 32
+augment:
+  name:
+  - hflip
+  - rcrop
+  - cutout
+  hp:
+    rcrop_pad: 14
+    cutout_p: 1.0
+    cutout_size: 0.5
+    ra_p: 1.0
+  ra:
+    space: ra
+    weight: single
+    single: Contrast
+    num_op: 2
+    magnitude: 14
+    random_magnitude: true
+    softmax_t: 0.5
+    affinity_path: null
+    fix_iden: true
+    init_epoch: 20
+    warmup_ra: false
+    aff_calc: false
+    aff_model: null
+dataset:
+  name: voc
+  n_class: 20
+  img_size: 224
+  resized_size: 224
+  train_size: null
+  mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  std:
+  - 0.229
+  - 0.224
+  - 0.225
+  ignore_label: 255
+optimizer:
+  name: SGD
+  scheduler:
+    name: cosine
+    step:
+    - 60
+    - 120
+    - 160
+    power: 0.9
+  loss:
+    name: ce
+    aux_weight: 0.4
+  hp:
+    lr: 0.01
+    lr_min: 0.0001
+    warmup_period: null
+    warmup_init: 1.0e-05
+    momentum: 0.9
+    weight_decay: 0.0001
+save:
+  img: true
+  plot: true
+  selected: true
+  affinity: false
+  affinity_all: false
+  interval: null
+out_dir: Noneoutput_cls/seed111/voc/HflipRcropCutout/
+execute_config_name: voc
+override_cmd:
+- default.seed=111
+- augment.name=[hflip,rcrop,cutout]
+- learn.n_epoch=3
+- augment.hp.cutout_p=1.0
+- augment.hp.rcrop_pad=14
+datetime: '2024-07-31 04:45:40.874819'
+test_acc: 0.9229401350021362
+time: 0h 1m 37s

@@ -48,44 +48,91 @@ from .psp_data_augmentation import Compose, Scale, RandomRotation, RandomMirror,
 
 
 
-# TODO: testを読み出すものを追記する、rootpathがtraivalを受け取っているのでtest用のパスを作る
-# どの画像がtrain, valにそれぞれ含まれるかを指定したtxtファイルから画像名のリストを取得
-def make_datapath_list(path_2012, path_2007):
-    """
-    学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する。
+# # どの画像がtrain, valにそれぞれ含まれるかを指定したtxtファイルから画像名のリストを取得
+# def make_datapath_list(path_2012, path_2007):
+#     """
+#     学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する。
 
-    Parameters
-    ----------
-    rootpath : str
-        データフォルダへのパス
+#     Parameters
+#     ----------
+#     rootpath : str
+#         データフォルダへのパス
 
-    Returns
-    -------
-    ret : train_img_list, train_anno_list, val_img_list, val_anno_list
-        データへのパスを格納したリスト
-    """
+#     Returns
+#     -------
+#     ret : train_img_list, train_anno_list, val_img_list, val_anno_list
+#         データへのパスを格納したリスト
+#     """
 
-    # 画像ファイルとアノテーションファイルへのパスのテンプレートを作成
-    imgpath_template = osp.join(path_2012, 'JPEGImages', '%s.jpg')
-    annopath_template = osp.join(path_2012, 'SegmentationClass', '%s.png')
+#     # 画像ファイルとアノテーションファイルへのパスのテンプレートを作成
+#     imgpath_template = osp.join(path_2012, 'JPEGImages', '%s.jpg')
+#     annopath_template = osp.join(path_2012, 'SegmentationClass', '%s.png')
 
-    test_imgpath_template = osp.join(path_2007, 'JPEGImages', '%s.jpg')
-    test_annopath_template = osp.join(path_2007, 'SegmentationClass', '%s.png')
+#     test_imgpath_template = osp.join(path_2007, 'JPEGImages', '%s.jpg')
+#     test_annopath_template = osp.join(path_2007, 'SegmentationClass', '%s.png')
 
-    # 訓練と検証、それぞれのファイルのID（ファイル名）を取得する
-    # ここにどのデータがtrainでどれがvalか書いてある
-    train_id_names = osp.join(path_2012 + 'ImageSets/Segmentation/train.txt')
-    val_id_names = osp.join(path_2012 + 'ImageSets/Segmentation/val.txt')
-    test_id_names = osp.join(path_2007 + 'ImageSets/Segmentation/test.txt')
+#     # 訓練と検証、それぞれのファイルのID（ファイル名）を取得する
+#     # ここにどのデータがtrainでどれがvalか書いてある
+#     train_id_names = osp.join(path_2012 + 'split/train.txt')
+#     val_id_names = osp.join(path_2012 + 'split/val.txt')
+#     test_id_names = osp.join(path_2007 + 'ImageSets/Segmentation/test.txt')
 
+#     # 訓練データの画像ファイルとアノテーションファイルへのパスリストを作成
+#     train_img_list = list()
+#     train_anno_list = list()
+
+#     for line in open(train_id_names):
+#         file_id = line.strip()  # 空白スペースと改行を除去
+#         img_path = (imgpath_template % file_id)  # 画像のパス
+#         anno_path = (annopath_template % file_id)  # アノテーションのパス
+#         train_img_list.append(img_path)
+#         train_anno_list.append(anno_path)
+
+#     # 検証データの画像ファイルとアノテーションファイルへのパスリストを作成
+#     val_img_list = list()
+#     val_anno_list = list()
+
+#     for line in open(val_id_names):
+#         file_id = line.strip()  # 空白スペースと改行を除去
+#         img_path = (imgpath_template % file_id)  # 画像のパス
+#         anno_path = (annopath_template % file_id)  # アノテーションのパス
+#         val_img_list.append(img_path)
+#         val_anno_list.append(anno_path)
+
+#     # テストデータの画像ファイルとアノテーションファイルへのパスリストを作成
+#     test_img_list = list()
+#     test_anno_list = list()
+
+#     for line in open(test_id_names):
+#         file_id = line.strip()
+#         img_path = (test_imgpath_template % file_id)
+#         anno_path = (test_annopath_template % file_id)
+#         test_img_list.append(img_path)
+#         test_anno_list.append(anno_path)
+
+#     return train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list
+
+def datapath_list(path_train, path_val, path_test):
+    train_imgpath_template = osp.join(path_train, 'image','%s.jpg')
+    val_imgpath_template = osp.join(path_val, 'image','%s.jpg')
+    test_imgpath_template = osp.join(path_test, 'image', '%s.jpg')
+    
+    train_annopath_template = osp.join(path_train, 'label', '%s.png')
+    val_annopath_template = osp.join(path_val, 'label', '%s.png')
+    test_annopath_template = osp.join(path_test, 'label', '%s.png')
+    
+    train_id_names = osp.join(path_train + 'trainaug.txt')
+    val_id_names = osp.join(path_val + 'val.txt')
+    test_id_names = osp.join(path_test + 'test.txt') 
+    
     # 訓練データの画像ファイルとアノテーションファイルへのパスリストを作成
     train_img_list = list()
     train_anno_list = list()
 
     for line in open(train_id_names):
         file_id = line.strip()  # 空白スペースと改行を除去
-        img_path = (imgpath_template % file_id)  # 画像のパス
-        anno_path = (annopath_template % file_id)  # アノテーションのパス
+        img_path = (train_imgpath_template % file_id)  # 画像のパス
+        anno_path = (train_annopath_template % file_id)  # アノテーションのパス
         train_img_list.append(img_path)
         train_anno_list.append(anno_path)
 
@@ -95,8 +142,8 @@ def make_datapath_list(path_2012, path_2007):
 
     for line in open(val_id_names):
         file_id = line.strip()  # 空白スペースと改行を除去
-        img_path = (imgpath_template % file_id)  # 画像のパス
-        anno_path = (annopath_template % file_id)  # アノテーションのパス
+        img_path = (val_imgpath_template % file_id)  # 画像のパス
+        anno_path = (val_annopath_template % file_id)  # アノテーションのパス
         val_img_list.append(img_path)
         val_anno_list.append(anno_path)
 
@@ -110,9 +157,8 @@ def make_datapath_list(path_2012, path_2007):
         anno_path = (test_annopath_template % file_id)
         test_img_list.append(img_path)
         test_anno_list.append(anno_path)
-
+        
     return train_img_list, train_anno_list, val_img_list, val_anno_list, test_img_list, test_anno_list
-
 
 
 # TODO: testにも対応した仕様に変更する

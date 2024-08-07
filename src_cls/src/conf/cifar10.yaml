@@ -1,0 +1,100 @@
+default:
+  env: "cotton"
+  seed: 1
+  output_dir: "output"
+  home_dir: "/homes/ykohata/code/devml/share/"
+  dataset_dir: "/homes/ykohata/code/devml/share/dataset/"
+  deterministic: False
+  parallel: False
+  device_id: 0
+  num_workers: 8
+  num_excute: 4
+  make_dir: True
+  add_filename: null
+
+
+network:
+  name: "resnet20"
+  pretrained: "nontrained"
+  dropout_rate: 0.3
+
+
+learn:
+  n_epoch: 250
+  batch_size: 128
+
+
+augment: 
+  name: 
+   - "base"
+  hp:
+    rcrop_pad: 4
+    cutout_p: 0.5
+    cutout_size: 0.5
+    ra_p: 1.0
+    
+  ra:
+    space: "ra"
+    weight: null
+    single: null
+    num_op: 2
+    magnitude:  14
+    random_magnitude: True
+    softmax_t: 0.5
+    affinity_path: null
+    fix_iden: True
+    init_epoch: null
+    warmup_ra: False
+    aff_calc: False
+    aff_model: null
+
+  
+
+dataset:
+  name: "cifar10"
+  n_class: 10
+  img_size: 32
+  resized_size: 32
+  train_size: null
+  mean: 
+    - 0.485
+    - 0.456
+    - 0.406
+  std: 
+    - 0.229
+    - 0.224
+    - 0.225
+  
+
+optimizer:
+  name: SGD
+  scheduler:
+    name: cosine
+    step:
+      - 60
+      - 120
+      - 160
+    
+  hp:
+    lr: 0.1
+    lr_min: 0.0001
+    warmup_period: null
+    warmup_init: 1e-5
+    momentum: 0.9
+    weight_decay: 5e-4
+    
+
+save:
+  img: True
+  plot: True
+  selected: True
+  affinity: False
+  affinity_all: False
+  interval: null
+
+
+
+
+
+
+

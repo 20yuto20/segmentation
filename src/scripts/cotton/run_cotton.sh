@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -j 
-#$ -o /homes/ykohata/code/devml/homes/ypark/code/seg/trash
+#$ -o /homes/ykohata/code/devml/homes/ypark/code/seg/src/trash/
 #$ -cwd
 
 source /etc/profile.d/modules.sh
@@ -13,11 +13,12 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=105
+seed=501
 python main.py voc \
-    default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/" \
-    default.seed=105 \
-    learn.n_epoch=3 \
-    augment.name=["ra"] \
+    default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc_aug/" \
+    default.seed=$seed \
+    learn.n_epoch=250 \
+    augment.name=["nan"] \
     augment.ra.weight="single" \
-    augment.ra.single="Brightness"
+    augment.ra.single="Cutout" \
+    && python notify.py 0 || python notify.py 1

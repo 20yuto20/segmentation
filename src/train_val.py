@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import tqdm
+from utils.common import AverageMeter, intersectionAndUnionGPU
 
 def get_pred(y):
     if isinstance(y, torch.Tensor):
@@ -11,14 +12,25 @@ def get_pred(y):
         out = y[0]
     return torch.argmax(out, dim=1)
 
-def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
-    model.train()
-    n_train = 0
-    sum_loss = 0.0
-    losses = []
-
+def visualize_results(cfg, epoch, image, label, pred, phase):
     debug_dir = os.path.join(cfg.out_dir, "debug")
     os.makedirs(debug_dir, exist_ok=True)
+
+    for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+        ax1.imshow(image[j].cpu().permute(1, 2, 0))
+        ax1.set_title("Input Image")
+        ax2.imshow(label[j].cpu())
+        ax2.set_title("True Label")
+        ax3.imshow(pred[j].cpu())
+        ax3.set_title("Prediction")
+        plt.savefig(os.path.join(debug_dir, f"debug_sample_epoch{epoch}_{phase}_sample{j}.png"))
+        plt.close()
+
+def train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluator, epoch):
+    model.train()
+    evaluator.reset()
+    loss_meter = AverageMeter()
 
     for i, sample in enumerate(train_progress_bar):
         image, label = sample['image'].to(device), sample['label'].to(device)
@@ -28,74 +40,60 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, epoch):
         
         y = model(image)
         loss = criterion(y, label.long())
+        
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        sum_loss += loss.item()
-        n_train += image.size(0)
+
+        # メトリクスの計算
+        pred = get_pred(y)
+        evaluator.add_batch(pred, label)
+        
+        loss_meter.update(loss.item(), image.size(0))
         train_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-        losses.append(loss.item())
+        if epoch % 100 == 0 and i == 0:
+            visualize_results(cfg, epoch, image, label, pred, 'train')
 
-        # Randomly sample and visualize predictions (every 1000 iterations)
-        # if i % 1000 == 0:
-        if i % len(train_progress_bar) == 0:
-            with torch.no_grad():
-                pred = get_pred(y)
-                for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
-                    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
-                    # print(f"image: {image[j]}")
-                    ax1.imshow(image[j].cpu().permute(1, 2, 0))
-                    ax1.set_title("Input Image")
-                    ax2.imshow(label[j].cpu())
-                    # print(f"label: {label[j]}")
-                    ax2.set_title("True Label")
-                    ax3.imshow(pred[j].cpu())
-                    ax3.set_title("Prediction")
-                    plt.savefig(os.path.join(debug_dir, f"debug_sample_epoch{epoch}_iter{i}_sample{j}.png"))
-                    plt.close()
+    mIoU = evaluator.Mean_Intersection_over_Union()
+    Acc = evaluator.Pixel_Accuracy()
 
-    # # After the training loop
-    # plt.figure(figsize=(10, 5))
-    # plt.plot(losses)
-    # plt.title("Training Loss per Iteration")
-    # plt.xlabel("Iteration")
-    # plt.ylabel("Loss")
-    # plt.savefig(os.path.join(debug_dir, f"training_loss_epoch{epoch}.png"))
-    # plt.close()
+    return loss_meter.avg, mIoU, Acc
 
-    return sum_loss / n_train
-
-def val(device, model, val_progress_bar, criterion, evaluator):
+def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
     model.eval()
-    for sample in val_progress_bar:
+    evaluator.reset()
+    
+    for i, sample in enumerate(val_progress_bar):
         image, label = sample['image'].to(device), sample['label'].to(device)
 
         if label.dim() == 4:
             label = label.squeeze(1)
         
-        # ラベルをLong型に変換
         label = label.long()
 
         with torch.no_grad():
             y = model(image)
 
-        loss = criterion(y, label)  # ignore_labelは自動的に無視される
+        loss = criterion(y, label)
         pred = get_pred(y)
-        pred = pred.data.cpu().numpy()
-        label = label.cpu().numpy()
         
-        evaluator.add_batch(label, pred)  # Evaluator内でignore_labelが処理される
+        evaluator.add_batch(pred, label)
         val_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
+
+        if epoch % 100 == 0 and i == 0:  # Visualize first batch every 100 epochs
+            visualize_results(cfg, epoch, image, label, pred, 'val')
 
     mIoU = evaluator.Mean_Intersection_over_Union()
     Acc = evaluator.Pixel_Accuracy()
 
     return mIoU, Acc
 
-def test(cfg, device, model, test_loader, criterion, evaluator):
+def test(cfg, device, model, test_loader, criterion):
     model.eval()
-    evaluator.reset()
+    intersection_meter = AverageMeter()
+    union_meter = AverageMeter()
+    target_meter = AverageMeter()
     
     test_progress_bar = tqdm.tqdm(test_loader, desc='Testing')
     
@@ -105,22 +103,23 @@ def test(cfg, device, model, test_loader, criterion, evaluator):
         if label.dim() == 4:
             label = label.squeeze(1)
         
-        # ラベルをLong型に変換
         label = label.long()
 
         with torch.no_grad():
             output = model(image)
         
-        loss = criterion(output, label)  # ignore_labelは自動的に無視される
+        loss = criterion(output, label)
         pred = get_pred(output)
-        pred = pred.data.cpu().numpy()
-        label = label.cpu().numpy()
         
-        evaluator.add_batch(label, pred)  # Evaluator内でignore_labelが処理される
+        intersection, union, target = intersectionAndUnionGPU(pred, label, cfg.dataset.n_class, cfg.dataset.ignore_label)
+        intersection, union, target = intersection.cpu().numpy(), union.cpu().numpy(), target.cpu().numpy()
+        intersection_meter.update(intersection), union_meter.update(union), target_meter.update(target)
+        
         test_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-    mIoU = evaluator.Mean_Intersection_over_Union()
-    Acc = evaluator.Pixel_Accuracy()
+    iou_class = intersection_meter.sum / (union_meter.sum + 1e-10)
+    mIoU = np.mean(iou_class)
+    allAcc = sum(intersection_meter.sum) / (sum(target_meter.sum) + 1e-10)
     
-    print(f"Test Results - Accuracy: {Acc:.4f}, mIoU: {mIoU:.4f}")
-    return mIoU, Acc
+    print(f"Test Results - Accuracy: {allAcc:.4f}, mIoU: {mIoU:.4f}")
+    return mIoU, allAcc

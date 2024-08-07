@@ -2,8 +2,9 @@ from typing import List, Dict, Optional, Union, Tuple
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
-from PIL import ImageOps
+from PIL import ImageOps, Image
 import torch
 import torchvision.transforms.functional as F
 from torch import Tensor, nn
@@ -176,7 +177,6 @@ def _apply_op(
     elif op_name == "Solarize":
         img = F.solarize(img, magnitude)
         # ラベルには適用しない
-    # FIXME: NOT applied
     elif op_name == "AutoContrast":
         img = F.autocontrast(img)
         # ラベルには適用しない
@@ -185,7 +185,44 @@ def _apply_op(
         # ラベルには適用しない
     # FIXME: NOT applied
     elif op_name == "Invert":
-        img = ImageOps.invert(img) # Using ImageOps instead of Pytorch just in case for debugging
+        
+        # original_pix = np.array(img)
+        # print(f"orignal pixel: {original_pix}")
+        
+        img = ImageOps.invert(img)
+        
+        # inverted_pix = np.array(img)
+        # print(f"inverted pix: {inverted_pix}")
+        
+
+        # pix_diff = np.abs(original_pix - inverted_pix)
+        # print(f"Average pixel difference: {np.mean(pix_diff)}")
+        
+        # output_dir = "./output_debug_invert"
+        # if not os.path.exists(output_dir):
+        #     os.makedirs(output_dir)
+        
+        # # ヒストグラムを保存
+        # plt.figure(figsize=(15, 5))
+        # plt.subplot(1, 2, 1)
+        # plt.title('Histogram of Original Image')
+        # plt.hist(original_pix.flatten(), bins=256, color='blue', alpha=0.5, label='Original')
+        # plt.xlabel('Pixel Value')
+        # plt.ylabel('Frequency')
+        # plt.legend()
+        # original_hist_path = os.path.join(output_dir, 'original_histogram.png')
+        # plt.savefig(original_hist_path)
+
+        # plt.subplot(1, 2, 2)
+        # plt.title('Histogram of Inverted Image')
+        # plt.hist(inverted_pix.flatten(), bins=256, color='red', alpha=0.5, label='Inverted')
+        # plt.xlabel('Pixel Value')
+        # plt.ylabel('Frequency')
+        # plt.legend()
+        # inverted_hist_path = os.path.join(output_dir, 'inverted_histogram.png')
+        # plt.savefig(inverted_hist_path)
+
+        # plt.show()
         # ラベルには適用しない
     elif op_name == "Identity":
         pass
@@ -194,21 +231,20 @@ def _apply_op(
         cutout = Cutout(n_holes=1, img_size=min(height, width), patch_size=magnitude)
         sample = cutout({'image': img, 'label': label})
         img, label = sample['image'], sample['label']
+    elif op_name == "Cutout_img": # Labelには適応させずに画像だけ適応させる
+        _, height, width = F.get_dimensions(img)
+        cutout = Cutout(n_holes=1, img_size=min(height, width), patch_size=magnitude)
+        sample = cutout({'image' : img})
+        img = sample['image']
     elif op_name == "SolarizeAdd":
         img = solarize_add(image=img, addition=int(magnitude), threshold=128)
         # ラベルには適用しない
-    # FIXME: NOT applied
-    elif op_name == "Hflip":
-        print("Applying Hflip")  # デバッグ用
-        print(f"Before Hflip - Image shape: {img.size}, Type: {type(img)}")
-        img = ImageOps.mirror(img)
-        label = ImageOps.mirror(label)
-        print(f"After Hflip - Image shape: {img.size}, Type: {type(img)}")
-        print("Hflip Applied")  # デバッグ用
-    # FIXME: NOT applied 
-    elif op_name == "Vflip":
-        img = F.vflip(img)
-        label = F.vflip(label)
+    # elif op_name == "Hflip":
+    #     img = ImageOps.mirror(img)
+    #     label = ImageOps.mirror(label)
+    # elif op_name == "Vflip":
+    #     img = F.vflip(img)
+    #     label = F.vflip(label)
         
     else:
         raise ValueError(f"The provided operator {op_name} is not recognized.")

@@ -26,6 +26,7 @@ class Normalize(object):
         return {'image': img, 'label': mask}
 
 
+# https://github.com/YutaroOgawa/pytorch_advanced/blob/master/3_semantic_segmentation/utils/data_augumentation.py
 class Normalize_Tensor(object):
     def __init__(self, color_mean, color_std):
         self.color_mean = color_mean

@@ -41,7 +41,6 @@ def setup_config():
     # dataset dirを設定
     if cfg.default.dataset_dir is None:
         cfg.default.dataset_dir = os.path.join(parent_dir, "dataset")
-    
 
     # コマンドラインで受け取った引数とconfig_fileの情報をmerge
     cfg = OmegaConf.merge(cfg, OmegaConf.from_cli(args_list=args[2:]))
