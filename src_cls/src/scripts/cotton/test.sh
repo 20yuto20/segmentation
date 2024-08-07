@@ -17,7 +17,7 @@ seed=112
 python main.py voc \
     default.seed=$seed \
     learn.n_epoch=250 \
-    augment.name=["ra"] \
+    augment.name=["nan"] \
     augment.ra.weight="single" \
     augment.ra.single="ShearX" \
     && python notify.py 0 || python notify.py 1

@@ -52,7 +52,7 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluato
         loss_meter.update(loss.item(), image.size(0))
         train_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-        if epoch % 50 == 0 and i == 0:
+        if epoch % 100 == 0 and i == 0:
             visualize_results(cfg, epoch, image, label, pred, 'train')
 
     mIoU = evaluator.Mean_Intersection_over_Union()
