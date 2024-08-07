@@ -34,19 +34,33 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluato
 
     for i, sample in enumerate(train_progress_bar):
         image, label = sample['image'].to(device), sample['label'].to(device)
-
         if label.dim() == 4:
             label = label.squeeze(1)
         
-        y = model(image)
-        loss = criterion(y, label.long())
+        label = label.long()  # ラベルをLong型に変換
         
+        output, main_loss, aux_loss = model(image, label)
+        loss = main_loss + cfg.optimizer.loss.aux_weight * aux_loss
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         # メトリクスの計算
-        pred = get_pred(y)
+        if output.dim() == 4:  # [B, C, H, W]
+            pred = output.argmax(1)  # クラスごとの最大値のインデックスを取得
+        elif output.dim() == 3:  # [B, H*W, C]
+            pred = output.argmax(2).view(label.shape)
+        else:
+            raise ValueError(f"Unexpected output shape: {output.shape}")
+        
+        # print(f"Pred shape: {pred.shape}, Label shape: {label.shape}")
+        
+        pred = pred.cpu().numpy()  # GPU tensor から numpy array に変換
+        label = label.cpu().numpy()  # GPU tensor から numpy array に変換
+        
+        # print(f"Final pred shape: {pred.shape}, Final label shape: {label.shape}")
+        
         evaluator.add_batch(pred, label)
         
         loss_meter.update(loss.item(), image.size(0))
@@ -65,26 +79,33 @@ def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
     evaluator.reset()
     loss_meter = AverageMeter()
     
-    for i, sample in enumerate(val_progress_bar):
-        image, label = sample['image'].to(device), sample['label'].to(device)
+    with torch.no_grad():
+        for i, sample in enumerate(val_progress_bar):
+            image, label = sample['image'].to(device), sample['label'].to(device)
+            if label.dim() == 4:
+                label = label.squeeze(1)
+            
+            label = label.long()
+            output = model(image)
+            
+            print(f"Output shape: {output.shape}, Label shape: {label.shape}")
+            
+            loss = criterion(output, label)
+            loss_meter.update(loss.item(), image.size(0))
+            
+            pred = output.argmax(1)
+            
+            print(f"Pred shape: {pred.shape}, Label shape: {label.shape}")
+            
+            pred = pred.cpu().numpy()
+            label = label.cpu().numpy()
+            
+            evaluator.add_batch(pred, label)
+            
+            val_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-        if label.dim() == 4:
-            label = label.squeeze(1)
-        
-        label = label.long()
-
-        with torch.no_grad():
-            y = model(image)
-
-        loss = criterion(y, label)
-        loss_meter.update(loss.item(), image.size(0))
-        pred = get_pred(y)
-        
-        evaluator.add_batch(pred, label)
-        val_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
-
-        if epoch % 100 == 0 and i == 0:  # Visualize first batch every 100 epochs
-            visualize_results(cfg, epoch, image, label, pred, 'val')
+            if epoch % 100 == 0 and i == 0:
+                visualize_results(cfg, epoch, image, label, pred, 'val')
 
     mIoU = evaluator.Mean_Intersection_over_Union()
     Acc = evaluator.Pixel_Accuracy()
