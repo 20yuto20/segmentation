@@ -17,7 +17,7 @@ seed=501
 python main.py voc \
     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc_aug/" \
     default.seed=$seed \
-    learn.n_epoch=12 \
+    learn.n_epoch=2 \
     augment.name=["nan"] \
     augment.ra.weight="single" \
     augment.ra.single="Cutout" \

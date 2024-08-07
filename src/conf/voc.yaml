@@ -15,8 +15,12 @@ default:
 
 network:
   name: "pspnet"
-  pretrained: False
-  dropout_rate: 0.3
+  pretrained: True
+  dropout_rate: 0.1
+  zoom_factor: 8
+  use_ppm: True
+  resenet_layers: 50
+
 
 
 learn:
