@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_G.small=1
-#$ -l h_rt=10:00:00
+#$ -l h_rt=20:00:00
 #$ -j y
 #$ -o /groups/gaa50073/kohata-yuto/segmentation/src/trash/
 #$ -cwd
