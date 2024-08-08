@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_G.small=1
-#$ -l h_rt=10:00:00
+#$ -l h_rt=20:00:00
 #$ -j y
 #$ -o /groups/gaa50073/kohata-yuto/segmentation/src/trash/
 #$ -cwd
@@ -34,7 +34,7 @@ seed=301
 python main.py voc \
     default.device_id=0 \
     default.dataset_dir="$SGE_LOCALDIR/dataset/voc_aug/" \
-    learn.n_epoch=200 \
+    learn.n_epoch=50 \
     learn.batch_size=8 \
     default.seed=$seed \
     augment.name=["nan"] \
