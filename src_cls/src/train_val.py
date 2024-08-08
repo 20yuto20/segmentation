@@ -15,6 +15,9 @@ def train(model, device, train_loader, optimizer, criterion):
     train_acc = 0
     n_samples = 0
     
+    all_outputs = []
+    all_targets = []
+    
     for batch in tqdm(train_loader):
         data, target = batch['image'].to(device), batch['label'].to(device)
         optimizer.zero_grad()
@@ -26,8 +29,21 @@ def train(model, device, train_loader, optimizer, criterion):
         train_loss += loss.item() * data.size(0)
         train_acc += accuracy(output, target) # * data.size(0)
         n_samples += data.size(0)
+        
+        all_outputs.append(output.detach().cpu().numpy())
+        all_targets.append(target.cpu().numpy())
+        
+    all_outputs = np.concatenate(all_outputs)
+    all_targets = np.concatenate(all_targets)
     
-    return train_loss / n_samples, train_acc / n_samples
+    ap_scores = []
+    for i in range(all_targets.shape[1]):
+        ap = average_precision_score(all_targets[:, i], all_outputs[:, i])
+        ap_scores.append(ap)
+    
+    mAP = np.mean(ap_scores)
+    
+    return train_loss / n_samples, train_acc / n_samples, mAP
 
 def val(model, device, val_loader, criterion):
     model.eval()

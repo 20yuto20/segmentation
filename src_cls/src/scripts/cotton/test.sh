@@ -13,10 +13,11 @@ echo "ok"
 
 cd $WORKDIR
 
-seed=112
+seed=113
 python main.py voc \
     default.seed=$seed \
-    learn.n_epoch=250 \
+    learn.n_epoch=15 \
+    learn.batch_size=32 \
     augment.name=["nan"] \
     augment.ra.weight="single" \
     augment.ra.single="ShearX" \

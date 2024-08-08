@@ -73,12 +73,15 @@ def suggest_network(cfg):
 
 def suggest_optimizer(cfg, model):
     if cfg.optimizer.name == "SGD":
+        params = [
+            {'params': list(model.parameters())[:-2], 'lr': cfg.optimizer.hp.lr * 0.1},
+            {'params': list(model.parameters())[-2:], 'lr': cfg.optimizer.hp.lr}
+        ]
         optimizer = torch.optim.SGD(
-            params=model.parameters(), 
-            lr=cfg.optimizer.hp.lr, 
-            momentum=cfg.optimizer.hp.momentum, 
-            weight_decay=cfg.optimizer.hp.weight_decay, 
-            nesterov=True,
+            params,
+            momentum=cfg.optimizer.hp.momentum,
+            weight_decay=cfg.optimizer.hp.weight_decay,
+            nesterov=True
         )
     elif cfg.optimizer.name == "AdamW":
         optimizer = torch.optim.AdamW(

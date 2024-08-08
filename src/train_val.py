@@ -88,14 +88,14 @@ def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
             label = label.long()
             output = model(image)
             
-            print(f"Output shape: {output.shape}, Label shape: {label.shape}")
+            # print(f"Output shape: {output.shape}, Label shape: {label.shape}")
             
             loss = criterion(output, label)
             loss_meter.update(loss.item(), image.size(0))
             
             pred = output.argmax(1)
             
-            print(f"Pred shape: {pred.shape}, Label shape: {label.shape}")
+            # print(f"Pred shape: {pred.shape}, Label shape: {label.shape}")
             
             pred = pred.cpu().numpy()
             label = label.cpu().numpy()

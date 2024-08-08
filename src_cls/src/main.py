@@ -66,7 +66,7 @@ def main(cfg):
     all_training_result = []
     # affinity_df = pd.DataFrame()
     for epoch in range(1, cfg.learn.n_epoch + 1):
-        train_loss, train_acc = train(model, device, train_loader, optimizer, loss_func)
+        train_loss, train_acc, train_mAP = train(model, device, train_loader, optimizer, loss_func)
         val_loss, val_acc, val_mAP = val(model, device, val_loader, loss_func)
 
         all_training_result.append([
@@ -83,8 +83,11 @@ def main(cfg):
             f"Epoch: [{epoch:03}/{cfg.learn.n_epoch:03}] \t"
             + f"train loss: {train_loss:.6f} \t"
             + f"train acc: {train_acc:.6f} \t"
+            + f"trian mAP: {train_mAP:.6f} \t"
             + f"val loss: {val_loss:.6f} \t"
             + f"val acc: {val_acc:.6f} \t"
+            + f"val mAP: {val_mAP:.6f} \t"
+            
         )
         sys.stdout.flush()
 
