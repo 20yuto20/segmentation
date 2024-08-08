@@ -66,14 +66,15 @@ def main(cfg):
     all_training_result = []
     # affinity_df = pd.DataFrame()
     for epoch in range(1, cfg.learn.n_epoch + 1):
-        train_loss, train_acc, train_mAP = train(model, device, train_loader, optimizer, loss_func)
-        val_loss, val_acc, val_mAP = val(model, device, val_loader, loss_func)
+        train_loss, _, train_mAP = train(model, device, train_loader, optimizer, loss_func)
+        val_loss, _, val_mAP = val(model, device, val_loader, loss_func)
 
         all_training_result.append([
             train_loss.cpu().item() if isinstance(train_loss, torch.Tensor) else train_loss,
-            train_acc.cpu().item() if isinstance(train_acc, torch.Tensor) else train_acc,
+            train_mAP.cpu().item() if isinstance(train_mAP, torch.Tensor) else train_mAP,
+            # train_acc.cpu().item() if isinstance(train_acc, torch.Tensor) else train_acc,
             val_loss.cpu().item() if isinstance(val_loss, torch.Tensor) else val_loss,
-            val_acc.cpu().item() if isinstance(val_acc, torch.Tensor) else val_acc,
+            # val_acc.cpu().item() if isinstance(val_acc, torch.Tensor) else val_acc,
             val_mAP.cpu().item() if isinstance(val_mAP, torch.Tensor) else val_mAP
         ])
         interval = time.time() - start
@@ -82,10 +83,10 @@ def main(cfg):
         print(
             f"Epoch: [{epoch:03}/{cfg.learn.n_epoch:03}] \t"
             + f"train loss: {train_loss:.6f} \t"
-            + f"train acc: {train_acc:.6f} \t"
+            # + f"train acc: {train_acc:.6f} \t"
             + f"trian mAP: {train_mAP:.6f} \t"
             + f"val loss: {val_loss:.6f} \t"
-            + f"val acc: {val_acc:.6f} \t"
+            # + f"val acc: {val_acc:.6f} \t"
             + f"val mAP: {val_mAP:.6f} \t"
             
         )
@@ -119,7 +120,7 @@ def main(cfg):
 
     all_training_result = pd.DataFrame(
         all_training_result,
-        columns=["train_loss", "train_acc", "val_loss", "val_acc", "val_mAP"]
+        columns=["train_loss", "train_mAP", "val_loss", "val_mAP"]
     )
     
     print("all_training_result type:", type(all_training_result))
@@ -128,35 +129,35 @@ def main(cfg):
     interval = time.time() - start
     interval = get_time(interval)
 
-    test_loss, test_acc, test_mAP = test(model, device, test_loader, loss_func, cfg)
+    test_loss, _, test_mAP = test(model, device, test_loader, loss_func, cfg)
 
     # GPUテンソルをCPUに移動し、Pythonのネイティブ型に変換
     test_loss = test_loss.cpu().item() if isinstance(test_loss, torch.Tensor) else test_loss
-    test_acc = test_acc.cpu().item() if isinstance(test_acc, torch.Tensor) else test_acc
+    # test_acc = test_acc.cpu().item() if isinstance(test_acc, torch.Tensor) else test_acc
     test_mAP = test_mAP.cpu().item() if isinstance(test_mAP, torch.Tensor) else test_mAP
 
     print(
         f"time: {interval['time']} \t"
         +f"test loss: {test_loss:.6f} \t"
-        +f"test acc: {test_acc:.6f} \t"
+        # +f"test acc: {test_acc:.6f} \t"
         +f"test mAP: {test_mAP:.6f} \t"
     )
 
     # DataFrameに新しい行を追加
     new_row = pd.DataFrame({
         "train_loss": [np.nan],
-        "train_acc": [np.nan],
+        # "train_acc": [np.nan],
         "val_loss": [np.nan],
-        "val_acc": [np.nan],
+        # "val_acc": [np.nan],
         "val_mAP": [np.nan],
         "test_loss": [test_loss],
-        "test_acc": [test_acc],
+        # "test_acc": [test_acc],
         "test_mAP": [test_mAP]
     })
     all_training_result = pd.concat([all_training_result, new_row], ignore_index=True)
     all_training_result.to_csv(save_file_path, index=False)
     
-    add_config(cfg, {"test_acc" : test_acc})
+    # add_config(cfg, {"test_acc" : test_acc})
     add_config(cfg, interval)
     plot_log(cfg, all_training_result)
 

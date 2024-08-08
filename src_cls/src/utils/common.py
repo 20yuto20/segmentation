@@ -19,7 +19,7 @@ def get_time(interval):
 # plot loss and acc curve
 def plot_log(cfg, data):
     epochs = np.arange(1, len(data) + 1 - 3)
-    fig, ax = plt.subplots(1, 3, figsize=(24, 8), dpi = 80)
+    fig, ax = plt.subplots(1, 2, figsize=(24, 8), dpi = 80)
     
     ax[0].plot(epochs, data["train_loss"][:-3], label='Train', alpha=0.8, linewidth=5)
     ax[0].plot(epochs, data["val_loss"][:-3], label='Validation', alpha=0.8, linewidth=5)
@@ -30,22 +30,22 @@ def plot_log(cfg, data):
     ax[0].tick_params(labelsize=25)
     ax[0].grid()
 
-    ax[1].plot(epochs, data["train_acc"][:-3], label='Training', alpha=0.8, linewidth=5)
-    ax[1].plot(epochs, data["val_acc"][:-3], label='Validation', alpha=0.8, linewidth=5)
-    ax[1].set_title('Accuracy', fontsize=30)
+    # ax[1].plot(epochs, data["train_acc"][:-3], label='Training', alpha=0.8, linewidth=5)
+    # ax[1].plot(epochs, data["val_acc"][:-3], label='Validation', alpha=0.8, linewidth=5)
+    # ax[1].set_title('Accuracy', fontsize=30)
+    # ax[1].set_xlabel('Epochs', fontsize=25)
+    # ax[1].set_ylabel('Accuracy', fontsize=25)
+    # ax[1].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
+    # ax[1].tick_params(labelsize=25)
+    # ax[1].grid()
+
+    ax[1].plot(epochs, data["val_mAP"][:-3], label='Validation', alpha=0.8, linewidth=5)
+    ax[1].set_title('mAP', fontsize=30)
     ax[1].set_xlabel('Epochs', fontsize=25)
-    ax[1].set_ylabel('Accuracy', fontsize=25)
+    ax[1].set_ylabel('mAP', fontsize=25)
     ax[1].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
     ax[1].tick_params(labelsize=25)
     ax[1].grid()
-
-    ax[2].plot(epochs, data["val_mAP"][:-3], label='Validation', alpha=0.8, linewidth=5)
-    ax[2].set_title('mAP', fontsize=30)
-    ax[2].set_xlabel('Epochs', fontsize=25)
-    ax[2].set_ylabel('mAP', fontsize=25)
-    ax[2].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
-    ax[2].tick_params(labelsize=25)
-    ax[2].grid()
     
     fig.suptitle(f"{cfg.out_dir}")
     plt.tight_layout()
