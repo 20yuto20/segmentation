@@ -2,15 +2,26 @@ import os
 import sys
 
 from omegaconf import OmegaConf
+from pathlib import Path
 import datetime
 
 
 
 def setup_config():
+    current_dir = Path(__file__).resolve().parent
+    conf_dir = current_dir / "conf"
+    
     args = sys.argv
+    
     config_file_name = args[1]
-    config_file_path = f"/homes/ykohata/code/devml/homes/ypark/code/seg/src_cls/src/conf/{config_file_name}.yaml"
-    # config_file_path = f"/groups/gaa50073/park-yuna/share/src/conf/{config_file_name}.yaml"
+    print(f"config_file_name: {config_file_name}")
+    config_file_path = conf_dir / f"{config_file_name}.yaml"
+    
+    # args = sys.argv
+    # config_file_name = args[1]
+    # config_file_path = f"/homes/ykohata/code/devml/homes/ypark/code/seg/src_cls/src/conf/{config_file_name}.yaml"
+    # # config_file_path = f"/groups/gaa50073/park-yuna/share/src/conf/{config_file_name}.yaml"
+    
     if os.path.exists(config_file_path):
         cfg = OmegaConf.load(config_file_path)
     else:

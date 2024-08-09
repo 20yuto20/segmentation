@@ -22,14 +22,14 @@ echo "unzip the dataset"
 
 cd $WORKDIR
 
-# case $SGE_TASK_ID in
-#     1) seed=2;;
-#     2) seed=3;;
-#     3) seed=4;;
-#     *) echo "Invalid task ID"; exit 1;;
-# esac
+case $SGE_TASK_ID in
+    1) seed=2024;;
+    2) seed=2025;;
+    3) seed=2026;;
+    *) echo "Invalid task ID"; exit 1;;
+esac
 
-seed=301
+# seed=301
 
 python main.py voc \
     default.device_id=0 \
@@ -37,9 +37,9 @@ python main.py voc \
     learn.n_epoch=50 \
     learn.batch_size=8 \
     default.seed=$seed \
-    augment.name=["nan"] \
+    augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="ShearX" \
+    augment.ra.single="Rotate" \
     && python notify.py 0 || python notify.py 1
 
 # 実行するとき
