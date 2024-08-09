@@ -45,7 +45,7 @@ augment:
     weight: single # 第一段階ではsingle
     single: Contrast # 第一段階では特定のDA選択
     num_op: 2
-    magnitude:  14
+    magnitude: 14
     random_magnitude: True
     softmax_t: 0.5
     affinity_path: null

@@ -161,17 +161,22 @@ def get_composed_transform(cfg, phase):
                         p=cfg.augment.hp.cutout_p
                     )
                 )
-
+                
             elif aug_name == "ra":
-                transform_list = transform_list + [
-                    transforms.RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad),
-                    transforms.RandomHorizontalFlip(p=0.5),
-                    transforms.RandomApply(
-                        [RandAugment(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude),
-                        Cutout(n_holes=1, img_size=cfg.dataset.resized_size, patch_size=cfg.augment.hp.cutout_size)],
-                        p=cfg.augment.hp.ra_p
-                        )
-                    ]
+                transform_list.append(
+                    RandAugment(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude)
+                )
+
+            # elif aug_name == "ra":
+            #     transform_list = transform_list + [
+            #         transforms.RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad),
+            #         transforms.RandomHorizontalFlip(p=0.5),
+            #         transforms.RandomApply(
+            #             [RandAugment(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude),
+            #             Cutout(n_holes=1, img_size=cfg.dataset.resized_size, patch_size=cfg.augment.hp.cutout_size)],
+            #             p=cfg.augment.hp.ra_p
+            #             )
+            #         ]
             
             elif aug_name == "nan":
                 pass
