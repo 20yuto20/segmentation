@@ -18,12 +18,34 @@ def visualize_results(cfg, epoch, image, label, pred, phase):
 
     for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
-        ax1.imshow(image[j].cpu().permute(1, 2, 0))
+        
+        # Convert image to numpy if it's a tensor
+        if isinstance(image, torch.Tensor):
+            img = image[j].cpu().permute(1, 2, 0).numpy()
+        else:
+            img = image[j].transpose(1, 2, 0)
+        
+        ax1.imshow(img)
         ax1.set_title("Input Image")
-        ax2.imshow(label[j].cpu())
+        
+        # Convert label to numpy if it's a tensor
+        if isinstance(label, torch.Tensor):
+            lbl = label[j].cpu().numpy()
+        else:
+            lbl = label[j]
+        
+        ax2.imshow(lbl)
         ax2.set_title("True Label")
-        ax3.imshow(pred[j].cpu())
+        
+        # Convert pred to numpy if it's a tensor
+        if isinstance(pred, torch.Tensor):
+            prd = pred[j].cpu().numpy()
+        else:
+            prd = pred[j]
+        
+        ax3.imshow(prd)
         ax3.set_title("Prediction")
+        
         plt.savefig(os.path.join(debug_dir, f"debug_sample_epoch{epoch}_{phase}_sample{j}.png"))
         plt.close()
 
@@ -66,8 +88,12 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluato
         loss_meter.update(loss.item(), image.size(0))
         train_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-        if epoch % 25 == 0 and i == 0:
-            visualize_results(cfg, epoch, image, label, pred, 'train')
+        if epoch % 1 == 0 and i == 0:
+            # Ensure image, label, and pred are on CPU and in the correct format
+            vis_image = image.cpu()
+            vis_label = label
+            vis_pred = pred if isinstance(pred, np.ndarray) else pred.cpu()
+            visualize_results(cfg, epoch, vis_image, vis_label, vis_pred, 'train')
 
     mIoU = evaluator.Mean_Intersection_over_Union()
     Acc = evaluator.Pixel_Accuracy()
@@ -104,9 +130,13 @@ def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
             
             val_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
-            if epoch % 25 == 0 and i == 0:
-                visualize_results(cfg, epoch, image, label, pred, 'val')
-
+            if epoch % 1 == 0 and i == 0:
+                # Ensure image, label, and pred are on CPU and in the correct format
+                vis_image = image.cpu()
+                vis_label = label  # Already a NumPy array
+                vis_pred = pred    # Already a NumPy array
+                visualize_results(cfg, epoch, vis_image, vis_label, vis_pred, 'val')
+                
     mIoU = evaluator.Mean_Intersection_over_Union()
     Acc = evaluator.Pixel_Accuracy()
 

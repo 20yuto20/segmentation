@@ -13,11 +13,11 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=501
+seed=100001
 python main.py voc \
     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc_aug/" \
     default.seed=$seed \
-    learn.n_epoch=50 \
+    learn.n_epoch=1 \
     learn.batch_size=16 \
     augment.name=["nan"] \
     augment.ra.weight="single" \
