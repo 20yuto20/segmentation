@@ -276,6 +276,7 @@ class DefineAugmentSpace(nn.Module):
             "AutoContrast": (torch.tensor([0.0]), False),
             "Equalize": (torch.tensor([0.0]), False),
             "Cutout": (torch.linspace(0.0, 0.5, num_bins), False),
+            "Cutout_img": (torch.linspace(0.0, 0.5, num_bins), False),
             "SolarizeAdd": (torch.linspace(0, 110.0, num_bins), False),
             "Invert": (torch.tensor([0.0]), False),
             "Hflip":(torch.tensor([0.0]), False),
@@ -326,6 +327,7 @@ class DefineAugmentSpace(nn.Module):
             "Equalize": (torch.tensor([0.0]), False),
             ###
             "Cutout": (torch.linspace(0.0, 0.5, num_bins), False),
+            "Cutout_img": (torch.linspace(0.0, 0.5, num_bins), False),
             "SolarizeAdd": (torch.linspace(0, 110.0, num_bins), False),
             "Invert": (torch.tensor([0.0]), False),
             ###

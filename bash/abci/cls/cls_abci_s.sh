@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -l rt_G.small=1
-#$ -l h_rt=00:02:00
+#$ -l h_rt=02:00:00
 #$ -j y
 #$ -o /groups/gaa50073/kohata-yuto/segmentation/src_cls/src/trash/
 #$ -cwd
@@ -35,7 +35,7 @@ python main.py voc \
     default.device_id=0 \
     default.home_dir="/groups/gaa50073/kohata-yuto/segmentation/" \
     default.dataset_dir="$SGE_LOCALDIR/dataset/voc/VOCdevkit" \
-    learn.n_epoch=15 \
+    learn.n_epoch=65 \
     learn.batch_size=32 \
     default.seed=$seed \
     augment.name=["ra"] \

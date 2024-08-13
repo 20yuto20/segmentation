@@ -39,7 +39,7 @@ python main.py voc \
     default.seed=$seed \
     augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="Rotate" \
+    augment.ra.single="Invert" \
     && python notify.py 0 || python notify.py 1
 
 # 実行するとき
