@@ -234,8 +234,8 @@ def _apply_op(
     elif op_name == "Cutout_img": # Labelには適応させずに画像だけ適応させる
         _, height, width = F.get_dimensions(img)
         cutout = Cutout(n_holes=1, img_size=min(height, width), patch_size=magnitude)
-        sample = cutout({'image' : img})
-        img = sample['image']
+        sample = cutout({'image': img, 'label': label})
+        img, _ = sample['image'], sample['label']
     elif op_name == "SolarizeAdd":
         img = solarize_add(image=img, addition=int(magnitude), threshold=128)
         # ラベルには適用しない
@@ -243,9 +243,9 @@ def _apply_op(
     #     img = ImageOps.mirror(img)
     #     label = ImageOps.mirror(label)
     # elif op_name == "Vflip":
-    #     img = F.vflip(img)
-    #     label = F.vflip(label)
-        
+    #     img = ImageOps.flip(img)
+    #     label = ImageOps.flip(label)
+    #     print(f"img:{img} \n label:{label}")
     else:
         raise ValueError(f"The provided operator {op_name} is not recognized.")
     
