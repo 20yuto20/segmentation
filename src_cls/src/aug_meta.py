@@ -151,6 +151,7 @@ class DefineAugmentSpace(nn.Module):
             "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
             "AutoContrast": (torch.tensor([0.0]), False),
             "Equalize": (torch.tensor([0.0]), False),
+            "Vflip":(torch.tensor([0.0]), False)
         }
 
     def _original_augmentation_space(self, num_bins: int, image_size: Tuple[int, int]) -> Dict[str, Tuple[Tensor, bool]]:
