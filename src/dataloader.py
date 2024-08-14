@@ -96,19 +96,26 @@ def get_composed_transform(cfg, phase):
                 transform_list.append(
                     RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad)
                 )
-            elif aug_name == "hflip":
+            elif  aug_name == "hflip":
                 transform_list.append(
-                    lambda x: {
-                        'image': ImageOps.mirror(x['image']),
-                        'label': ImageOps.mirror(x['label'])
-                    }
+                    transforms.RandomApply(
+                        [lambda x: {
+                            'image': ImageOps.mirror(x['image']),
+                            'label': ImageOps.mirror(x['label'])
+                        }],
+                        p=0.5  # 50%の確率で適用
+                    )
                 )
+            
             elif aug_name == "vflip":
                 transform_list.append(
-                    lambda x: {
-                        'image': ImageOps.flip(x['image']),
-                        'label': ImageOps.flip(x['label'])
-                    }
+                    transforms.RandomApply(
+                        [lambda x: {
+                            'image': ImageOps.flip(x['image']),
+                            'label': ImageOps.flip(x['label'])
+                        }],
+                        p=0.5  # 50%の確率で適用
+                    )
                 )
                 # 50%
                 # transform_list.append(
