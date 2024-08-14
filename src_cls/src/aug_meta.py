@@ -124,6 +124,8 @@ class DefineAugmentSpace(nn.Module):
             "Sharpness": (torch.linspace(0.1, 1.9, num_bins), True),
             "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 4)).round().int(), False),
             "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
+            "SolarizeAdd": (torch.linspace(0, 110.0, num_bins), False),
+            "Invert": (torch.tensor([0.0]), False),
             "AutoContrast": (torch.tensor([0.0]), False),
             "Equalize": (torch.tensor([0.0]), False),
         }

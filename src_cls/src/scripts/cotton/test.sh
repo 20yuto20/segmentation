@@ -18,7 +18,7 @@ python main.py voc \
     default.seed=$seed \
     learn.n_epoch=1 \
     learn.batch_size=32 \
-    augment.name=["vflip"] \
+    augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="Brightness" \
+    augment.ra.single="SolarizeAdd" \
     && python notify.py 0 || python notify.py 1
