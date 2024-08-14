@@ -103,6 +103,13 @@ def get_composed_transform(cfg, phase):
                         'label': ImageOps.mirror(x['label'])
                     }
                 )
+            elif aug_name == "vflip":
+                transform_list.append(
+                    lambda x: {
+                        'image': ImageOps.flip(x['image']),
+                        'label': ImageOps.flip(x['label'])
+                    }
+                )
                 # 50%
                 # transform_list.append(
                 #     lambda x: {
