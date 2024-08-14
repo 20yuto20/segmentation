@@ -37,9 +37,9 @@ python main.py voc \
     learn.n_epoch=50 \
     learn.batch_size=8 \
     default.seed=$seed \
-    augment.name=["ra"] \
+    augment.name=["hflip"] \
     augment.ra.weight="single" \
-    augment.ra.single="Invert" \
+    augment.ra.single="Brightness" \
     && python notify.py 0 || python notify.py 1
 
 # 実行するとき
