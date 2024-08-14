@@ -153,6 +153,11 @@ def get_composed_transform(cfg, phase):
                 transform_list.append(
                     transforms.RandomHorizontalFlip(p=0.5)
                 )
+            
+            elif aug_name == "vflip":
+                transform_list.append(
+                    transforms.RandomVerticalFlip(p=0.5)
+                )
 
             elif aug_name == "cutout":
                 transform_list.append(

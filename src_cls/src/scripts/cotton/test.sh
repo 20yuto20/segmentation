@@ -13,12 +13,12 @@ echo "ok"
 
 cd $WORKDIR
 
-seed=501
+seed=10001
 python main.py voc \
     default.seed=$seed \
-    learn.n_epoch=65 \
+    learn.n_epoch=1 \
     learn.batch_size=32 \
-    augment.name=["ra"] \
+    augment.name=["vflip"] \
     augment.ra.weight="single" \
-    augment.ra.single="TranslateX" \
+    augment.ra.single="Brightness" \
     && python notify.py 0 || python notify.py 1
