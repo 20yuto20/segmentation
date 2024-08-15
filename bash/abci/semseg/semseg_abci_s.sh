@@ -22,24 +22,31 @@ echo "unzip the dataset"
 
 cd $WORKDIR
 
-case $SGE_TASK_ID in
-    1) seed=2024;;
-    2) seed=2025;;
-    3) seed=2026;;
-    *) echo "Invalid task ID"; exit 1;;
-esac
+# case $SGE_TASK_ID in
+#     1) seed=2024;;
+#     2) seed=2025;;
+#     3) seed=2026;;
+#     *) echo "Invalid task ID"; exit 1;;
+# esac
 
-# seed=301
+seed=301
 
 python main.py voc \
     default.device_id=0 \
     default.dataset_dir="$SGE_LOCALDIR/dataset/voc_aug/" \
-    learn.n_epoch=50 \
+    learn.n_epoch=1 \
     learn.batch_size=8 \
     default.seed=$seed \
+    default.num_workers=10 \
     augment.name=["ra"] \
-    augment.ra.weight="single" \
-    augment.ra.single="Brightness" \
+    augment.ra.weight="affinity" \
+    augment.ra.single="null" \
+    augment.ra.init_epoch=20 \
+    augment.ra.aff_calc="True" \
+    augment.ra.aff_model="/groups/gaa50073/kohata-yuto/segmentation/output/seed2024/voc/Hflip/weights/best.pth" \
+    save.affinity="True" \
+    save.affinity_all="True" \
+    save.interval=10 \
     && python notify.py 0 || python notify.py 1
 
 # 実行するとき

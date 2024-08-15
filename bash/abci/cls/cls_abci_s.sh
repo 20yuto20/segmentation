@@ -39,7 +39,7 @@ python main.py voc \
     learn.batch_size=32 \
     default.seed=$seed \
     augment.name=["ra"] \
-    augment.ra.weight="single" \
+    augment.ra.weight="random" \
     augment.ra.single="Invert" \
     && python notify.py 0 || python notify.py 1
 

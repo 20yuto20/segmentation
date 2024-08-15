@@ -1,1 +1,1 @@
-# segmentation
+# PSPnetを用いたタスクごとのデータ拡張の比較
