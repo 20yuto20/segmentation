@@ -1,0 +1,110 @@
+default:
+  env: "cotton" # abci用
+  seed: 1
+  output_dir: "output" # output dir名の指定
+  home_dir: "/homes/ypark/code/segmentation/"
+  dataset_dir: "/homes/ypark/code/segmentation/dataset/"
+  deterministic: False # モデル学習を早くする分再現率は下がる，基本的にFalseで良い
+  parallel: False # 分散学習用, 基本的にFalse
+  device_id: 0 # abci用
+  num_workers: 8 
+  num_excute: 4 
+  make_dir: True # Falseにするとoutput dirが作られなくなる, 基本的にFalse
+  add_filename: null # set_cfg.py def get_filenam()参照
+
+
+network:
+  name: "segnet"
+  pretrained: False # 基本今はスクラッチを使うからTrue用の実装は未搭載
+  dropout_rate: 0.3 # 今のsegnet modelにはdrop outはないが，後々使うかも
+
+
+learn:
+  n_epoch: 400
+  batch_size: 5
+
+# ここはaugmentの実装ができてから擦り合わせましょう
+augment: 
+  name: 
+   - "base" # aug name : list
+  # p: probability, どの確率でDAを適用するか
+  hp:
+    rcrop_pad: 4 #rcropの際にパディングする辺のピクセル数
+    cutout_p: 0.5
+    cutout_size: 0.5 #画像の何倍分をcutoutで隠すか
+    ra_p: 1.0
+    
+  ra:
+    space: "ra" # RAが選択可能なDA手法のspace, "ra" or "jda"が選択可能(基本"ra")
+    weight: null # weight type, "affinity", "random", "single"が選択可能, ra_temp.py参照
+    single: null # weight_type == "singel"の際に使用, ra_temp.py参照
+    num_op: 2
+    magnitude:  14
+    random_magnitude: True
+    softmax_t: 0.5
+    affinity_path: null
+    fix_iden: True # Identity(無変換)の選択買う率は重み付けせずに一定に固定するかどうか
+    init_epoch: 20 # for single pass method
+    warmup_ra: False # for single pass method
+    aff_calc: False # 学習前に学習済みモデルを読み出してかくDA手法のAffinity vakuesを計算してaffinity.csvを用意するか
+    aff_model: null #上の学習済みモデルのweight path
+
+  
+
+dataset:
+  name: "CitySpace" 
+  n_class: 41 # datasetのクラス数
+  img_size: 128
+  resized_size: 128 # リサイズ後の画像サイズ
+  train_size: null # もし学習データの一部だけを使いたいときに..気にしなくて良い
+  ### Normalizeのパラメータ，city用に合わせる必要あり
+  mean: 
+    - 0.485
+    - 0.456
+    - 0.406
+  std: 
+    - 0.229
+    - 0.224
+    - 0.225
+  
+
+optimizer:
+  name: SGD
+  scheduler:
+    name: cosine
+    # step lr schedulingを使う時に使用，cosineを使うので気にしない
+    step:
+      - 60
+      - 120
+      - 160
+
+  loss: 
+    name: "ce"
+    aux_weight: 0.4
+    
+  hp:
+    ### 設定し直してください
+    lr: 0.1
+    lr_min: 0.0001
+    #lr schedulerにwarmupを使用する時に使用
+    warmup_period: null 
+    warmup_init: 1e-5
+    # ptimizerのハイパラ
+    momentum: 0.9
+    weight_decay: 5e-4
+    
+# 今は気にしなくて大丈夫です
+save:
+  img: True 
+  plot: True
+  selected: True
+  affinity: False
+  affinity_all: False
+  interval: null
+
+
+
+
+
+
+

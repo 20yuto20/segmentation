@@ -1,2 +1,10 @@
 __pycache__/
-slurm-14344.out
+dataset/
+output/
+*.out
+comi/
+trash/
+output_cls/
+weights/
+Noneoutput_cls/
+initmodel/

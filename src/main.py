@@ -1,116 +1,153 @@
 import os
 from PIL import Image, ImageOps, ImageFilter
 import numpy as np
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
-from torchvision.transforms.functional import normalize
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision.models as models
 import sys
-import glob
-import numbers
-import random
 import matplotlib.pyplot as plt
-
-# import torchsummary
+import torch
 import tqdm
 import time
+import pandas as pd
+
+from set_cfg import setup_config, add_config
+from evalator import Evaluator
+from dataloader import get_dataloader
+from train_val import train, val, test
+from utils.common import (
+    setup_device,
+    fixed_r_seed,
+    get_time,
+    plot_log,
+    save_learner  
+)
+from utils.suggest import (
+    suggest_network,
+    suggest_loss_func,
+    suggest_optimizer,
+    suggest_scheduler
+)
 
 # Add the parent dir to the sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-from model.segnet import SegNet
-from evalator import Evaluator
-from dataloader import get_dataloader
+def visualize_samples(dataloader, num_samples=5):
+    samples = next(iter(dataloader))
+    images, labels = samples['image'], samples['label']
+
+    # color_palette = []
+    # for i in range(20):
+    #     color_palette.append([i, i, i])
+    # color_palette = np.array(color_palette)
+
+    for i in range(min(num_samples, len(images))):
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+        
+        # 画像の表示
+        img = images[i].permute(1, 2, 0).numpy()
+        img = (img - img.min()) / (img.max() - img.min())  # 正規化
+        ax1.imshow(img)
+        ax1.set_title("Input Image")
+        
+        # ラベルの表示
+        label = labels[i].squeeze().numpy()  # チャンネル次元を削除
+        # label = color_palette[label]    # カラーパレットに従ってRGBに変更
+        # label = (label - label.min()) / (label.max() - label.min())
+        # ax2.imshow(label, cmap='jet')  # カラーマップを使用
+        ax2.imshow(label)
+        ax2.set_title("Label")
+        
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(cur_dir)
+
+        save_dir = os.path.join(parent_dir, "output", "sample")
+        os.makedirs(save_dir, exist_ok=True)
+
+        file_path = os.path.join(save_dir, f"sample_visualization_{i}.png")
+        
+        plt.savefig(file_path)
+        plt.close()
 
 
-batch_size = 5
+def main(cfg):
+    device = setup_device(cfg)
+    fixed_r_seed(cfg)
 
-use_cuda = torch.cuda.is_available()
-print('Use CUDA:', use_cuda)
+    model = suggest_network(cfg)
+    model.to(device)
 
-num_class = 41
-model = SegNet(input_channels=3, output_channels=num_class)
-if use_cuda:
-    model.cuda()
+    optimizer = suggest_optimizer(cfg, model)
+    scheduler = suggest_scheduler(cfg, optimizer)
 
-optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    criterion = suggest_loss_func(cfg)
+    criterion.to(device)
 
-#エポック数の設定
-epoch_num = 400
+    train_loader, val_loader, test_loader = get_dataloader(cfg)
 
-# 誤差関数の設定
-criterion = nn.CrossEntropyLoss(reduction='mean')
-if use_cuda:
-    criterion.cuda()
+    evaluator = Evaluator(cfg.dataset.n_class)
 
-train_loader, val_loader = get_dataloader()
+    all_training_result = []
+    start_time = time.time()
+    best_miou = 0.0
 
-#評価関数
-evaluator = Evaluator(num_class)
-
-# 学習の実行
-loss_history = []
-start_time = time.time()
-
-for epoch in range(1, epoch_num+1):
-    epoch_start_time = time.time()
-    sum_loss = 0.0
-    count = 0
-    evaluator.reset()
-    # ネットワークを学習モードへ変更
-    model.train()
-
-    # tqdmを使用して学習の進捗を表示
-    train_progress_bar = tqdm.tqdm(train_loader, desc=f'Epoch {epoch}/{epoch_num} [Train]')
-    for sample in train_progress_bar:
-        image, label = sample['image'], sample['label']
-        if use_cuda:
-            image = image.cuda()
-            label = label.cuda()
-        y = model(image)
-        loss = criterion(y, label.long())
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        sum_loss += loss.item()
-        train_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
-
-    # ネットワークを評価モードへ変更
-    model.eval()
-    # 評価の実行
-    val_progress_bar = tqdm.tqdm(val_loader, desc=f'Epoch {epoch}/{epoch_num} [Val]')
-    for sample in val_progress_bar:
-        image, label = sample['image'], sample['label']
-        if use_cuda:
-            image = image.cuda()
-            label = label.cuda()
-        with torch.no_grad():
-            y = model(image)
-
-        loss = criterion(y, label.long())
-        sum_loss += loss.item()
-        pred = torch.argmax(y, dim=1)
-        pred = pred.data.cpu().numpy()
-        label = label.cpu().numpy()
-        evaluator.add_batch(label, pred)
-        val_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
-
-    mIoU = evaluator.Mean_Intersection_over_Union()
-    Acc = evaluator.Pixel_Accuracy()
+    for epoch in range(1, cfg.learn.n_epoch+1):
+        train_progress_bar = tqdm.tqdm(train_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Train]')
+        train_loss, train_mIoU, train_Acc = train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluator, epoch)
     
-    epoch_end_time = time.time()
-    epoch_duration = epoch_end_time - epoch_start_time
-    total_duration = epoch_end_time - start_time
-    
-    print(f"Epoch: {epoch}, Loss: {sum_loss/(len(train_loader)*batch_size):.4f}, Accuracy: {Acc:.4f}, mIoU: {mIoU:.4f}")
-    print(f"Epoch duration: {epoch_duration:.2f} seconds, Total duration: {total_duration:.2f} seconds")
-    print("-" * 80)
+        val_progress_bar = tqdm.tqdm(val_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Val]')
+        val_loss, val_mIoU, val_Acc = val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch)
 
-end_time = time.time()
-total_training_time = end_time - start_time
-print(f"Total training time: {total_training_time:.2f} seconds")
+        all_training_result.append({
+            "epoch": epoch, 
+            "train_loss": train_loss, 
+            "train_mIoU": train_mIoU, 
+            "train_acc": train_Acc,
+            "val_loss": val_loss,
+            "val_mIoU": val_mIoU, 
+            "val_acc": val_Acc
+        })
+
+        epoch_end_time = time.time()
+        total_duration = get_time(epoch_end_time - start_time)
+
+        print(f"{total_duration}, lr : {optimizer.param_groups[0]['lr']}")
+        print(f"Epoch: {epoch}, Train Loss: {train_loss:.4f}, Train Accuracy: {train_Acc:.4f}, Train mIoU: {train_mIoU:.4f}")
+        print(f"Val Loss: {val_loss:.4f}, Val Accuracy: {val_Acc:.4f}, Val mIoU: {val_mIoU:.4f}")
+        print("-" * 80)
+
+        if val_mIoU > best_miou:
+            best_miou = val_mIoU
+            print(f"New best mIoU: {best_miou}. Saving model...")
+            save_learner(cfg, model, device, True)
+            
+        scheduler.step()
+
+    end_time = time.time()
+    total_training_time = get_time(end_time - start_time)
+    print(f"Total training {total_training_time}")
+    
+    best_model_path = cfg.out_dir + "weights/best.pth"
+    model.load_state_dict(torch.load(best_model_path))
+
+    test_mIoU, test_Acc = test(cfg, device, model, test_loader, criterion)
+    print(f"Final Test Results - Test Accuracy: {test_Acc:.4f}, Test mIoU: {test_mIoU:.4f}")
+
+    test_result = {"test_mIoU": test_mIoU, "test_Acc": test_Acc}
+
+    if len(all_training_result) > 0:
+        train_df = pd.DataFrame(all_training_result)
+        train_df.to_csv(cfg.out_dir + "train_output.csv", index=False)
+        plot_log(cfg, train_df)
+
+    test_df = pd.DataFrame([test_result])
+    test_df.to_csv(cfg.out_dir + "test_output.csv", index=False)
+
+    print(f"Train results saved to: {cfg.out_dir}train_output.csv")
+    print(f"Test results saved to: {cfg.out_dir}test_output.csv")
+
+    add_config(cfg, {"test_acc": float(test_Acc), "test_mIoU": float(test_mIoU)})
+    add_config(cfg, {"total_training_time": str(total_training_time['time'])})
+
+if __name__ == "__main__":
+    cfg = setup_config()
+    main(cfg)

@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -j 
-#$ -o /homes/ykohata/code/devml/homes/ypark/code/seg/src/trash/
+#$ -o /homes/ykohata/code/devml/homes/ypark/code/seg/trash/
 #$ -cwd
 
 source /etc/profile.d/modules.sh
@@ -8,18 +8,17 @@ module load  python/3.11/3.11.2
 source ~/.bashrc
 conda activate new-ra
 
-WORKDIR=/homes/ykohata/code/devml/homes/ypark/code/seg
+WORKDIR="/homes/ykohata/code/devml/homes/ypark/code/seg/src_cls/src"
 echo "ok"
 
-cd $WORKDIR/src
+cd $WORKDIR
 
-seed=100003
+seed=10001
 python main.py voc \
-    default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc_aug/" \
     default.seed=$seed \
     learn.n_epoch=1 \
-    learn.batch_size=16 \
+    learn.batch_size=32 \
     augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="Cutout_img" \
+    augment.ra.single="SolarizeAdd" \
     && python notify.py 0 || python notify.py 1
