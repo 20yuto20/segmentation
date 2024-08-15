@@ -36,7 +36,7 @@ augment:
     # 475/2 = 237.5
     # よって237pix
 
-    cutout_p: 0.5
+    cutout_p: 1.0
     cutout_size: 0.5
     ra_p: 1.0
     
