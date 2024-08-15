@@ -92,7 +92,6 @@ class PSPNet(nn.Module):
 
     def forward(self, x, y=None):
         x_size = x.size()
-        assert (x_size[2]-1) % 8 == 0 and (x_size[3]-1) % 8 == 0
         h = int((x_size[2] - 1) / 8 * self.zoom_factor + 1)
         w = int((x_size[3] - 1) / 8 * self.zoom_factor + 1)
 
@@ -111,8 +110,11 @@ class PSPNet(nn.Module):
             aux = self.aux(x_tmp)
             if self.zoom_factor != 1:
                 aux = F.interpolate(aux, size=(h, w), mode='bilinear', align_corners=True)
-            main_loss = self.criterion(x, y)
-            aux_loss = self.criterion(aux, y)
-            return x, main_loss, aux_loss
+            if y is not None:
+                main_loss = self.criterion(x, y)
+                aux_loss = self.criterion(aux, y)
+                return x, main_loss, aux_loss
+            else:
+                return x
         else:
             return x

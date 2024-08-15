@@ -9,6 +9,7 @@ import torch
 
 from dataloader import get_dataloader
 from train_val import train, val, test
+from evalator import Evaluator
 from set_cfg import setup_config, add_config
 from ra import reset_cfg
 from affinity import Affinity, get_affinity_init
@@ -60,9 +61,11 @@ def main(cfg):
     save_file_path = cfg.out_dir + "output.csv"
     all_training_result = []
     affinity_df = pd.DataFrame()
+    evaluator = Evaluator(cfg.dataset.n_class)  # 追加
     for epoch in range(1, cfg.learn.n_epoch + 1):
-        train_loss, train_miou, train_acc = train(cfg, device, model, train_loader, optimizer, loss_func)
-        val_loss, val_miou, val_acc = val(cfg, device, model, val_loader, loss_func)
+        train_loss, train_miou, train_acc = train(cfg, device, model, train_loader, optimizer, loss_func, evaluator, epoch)
+        val_loss, val_miou, val_acc = val(cfg, device, model, val_loader, loss_func, evaluator, epoch)
+
 
         all_training_result.append([train_loss, train_miou, train_acc, val_loss, val_miou, val_acc])
         interval = time.time() - start

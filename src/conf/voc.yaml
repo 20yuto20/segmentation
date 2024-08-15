@@ -29,8 +29,7 @@ learn:
 
 
 augment: 
-  name: 
-   - rcrop
+  name: w_ra
   hp:
     rcrop_pad: 237
     # 画像サイズが475なことから
@@ -55,7 +54,7 @@ augment:
     affinity_path: null
     fix_iden: True
     init_epoch: 20
-    warmup_ra: False
+    warmup_ra: True
     aff_calc: False
     aff_model: null
 
