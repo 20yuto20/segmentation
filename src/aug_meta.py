@@ -239,12 +239,12 @@ def _apply_op(
     elif op_name == "SolarizeAdd":
         img = solarize_add(image=img, addition=int(magnitude), threshold=128)
         # ラベルには適用しない
-    # elif op_name == "Hflip":
-    #     img = ImageOps.mirror(img)
-    #     label = ImageOps.mirror(label)
-    # elif op_name == "Vflip":
-    #     img = ImageOps.flip(img)
-    #     label = ImageOps.flip(label)
+    elif op_name == "Hflip":
+        img = ImageOps.mirror(img)
+        label = ImageOps.mirror(label)
+    elif op_name == "Vflip":
+        img = ImageOps.flip(img)
+        label = ImageOps.flip(label)
     #     print(f"img:{img} \n label:{label}")
     else:
         raise ValueError(f"The provided operator {op_name} is not recognized.")

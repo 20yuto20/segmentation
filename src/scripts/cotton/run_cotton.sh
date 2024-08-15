@@ -20,6 +20,6 @@ python main.py voc \
     learn.n_epoch=1 \
     learn.batch_size=16 \
     augment.name=["ra"] \
-    augment.ra.weight="single" \
+    augment.ra.weight="random" \
     augment.ra.single="Cutout_img" \
     && python notify.py 0 || python notify.py 1
