@@ -35,12 +35,12 @@ python main.py voc \
     default.device_id=0 \
     default.home_dir="/groups/gaa50073/kohata-yuto/segmentation/" \
     default.dataset_dir="$SGE_LOCALDIR/dataset/voc/VOCdevkit" \
-    learn.n_epoch=65 \
+    learn.n_epoch=50 \
     learn.batch_size=32 \
     default.seed=$seed \
     augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="Rotate" \
+    augment.ra.single="Invert" \
     && python notify.py 0 || python notify.py 1
 
 # 実行するとき

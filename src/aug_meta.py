@@ -154,7 +154,7 @@ def _apply_op(
         img = F.rotate(img, magnitude, interpolation=interpolation, fill=fill)
         label = F.rotate(label, magnitude, interpolation=F.InterpolationMode.NEAREST, fill=255)
     elif op_name == "Brightness":
-        magnitude = 2.0
+        # magnitude = 2.0
         img = F.adjust_brightness(img, 1.0 + magnitude)
         # # print(f"Applied {op_name} with magnitude {magnitude}")  
         # brightness_factor = max(0.5, min(1.5, 1.0 + magnitude))  # 0.5から1.5の範囲に制限
