@@ -21,5 +21,5 @@ python main.py voc \
     learn.batch_size=16 \
     augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="Cutout_img" \
+    augment.ra.single="Invert" \
     && python notify.py 0 || python notify.py 1
