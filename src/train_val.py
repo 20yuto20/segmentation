@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import tqdm
 from utils.common import AverageMeter, intersectionAndUnionGPU
+from evalator import Evaluator
 
 def get_pred(y):
     if isinstance(y, torch.Tensor):
