@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import tqdm
+from tqdm import tqdm
 from utils.common import AverageMeter, intersectionAndUnionGPU
 from evalator import Evaluator
 
@@ -20,7 +20,6 @@ def visualize_results(cfg, epoch, image, label, pred, phase):
     for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
         
-        # Convert image to numpy if it's a tensor
         if isinstance(image, torch.Tensor):
             img = image[j].cpu().permute(1, 2, 0).numpy()
         else:
@@ -29,7 +28,6 @@ def visualize_results(cfg, epoch, image, label, pred, phase):
         ax1.imshow(img)
         ax1.set_title("Input Image")
         
-        # Convert label to numpy if it's a tensor
         if isinstance(label, torch.Tensor):
             lbl = label[j].cpu().numpy()
         else:
@@ -38,7 +36,6 @@ def visualize_results(cfg, epoch, image, label, pred, phase):
         ax2.imshow(lbl)
         ax2.set_title("True Label")
         
-        # Convert pred to numpy if it's a tensor
         if isinstance(pred, torch.Tensor):
             prd = pred[j].cpu().numpy()
         else:
@@ -55,9 +52,9 @@ def train(cfg, device, model, train_loader, optimizer, criterion, evaluator, epo
     evaluator.reset()
     loss_meter = AverageMeter()
     
-    train_progress_bar = tqdm.tqdm(train_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Train]')
+    train_progress_bar = tqdm(train_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Train]')
 
-    for i, sample in enumerate(train_loader):
+    for i, sample in enumerate(train_progress_bar):
         image, label = sample['image'].to(device), sample['label'].to(device)
         if label.dim() == 4:
             label = label.squeeze(1)
@@ -71,7 +68,6 @@ def train(cfg, device, model, train_loader, optimizer, criterion, evaluator, epo
         loss.backward()
         optimizer.step()
 
-        # メトリクスの計算
         pred = output.argmax(1)
         evaluator.add_batch(pred.cpu().numpy(), label.cpu().numpy())
         
@@ -91,7 +87,7 @@ def val(cfg, device, model, val_loader, criterion, evaluator, epoch):
     evaluator.reset()
     loss_meter = AverageMeter()
     
-    val_progress_bar = tqdm.tqdm(val_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Val]')
+    val_progress_bar = tqdm(val_loader, desc=f'Epoch {epoch}/{cfg.learn.n_epoch} [Val]')
     
     with torch.no_grad():
         for i, sample in enumerate(val_progress_bar):
@@ -124,7 +120,7 @@ def test(cfg, device, model, test_loader, criterion):
     evaluator = Evaluator(cfg.dataset.n_class)
     loss_meter = AverageMeter()
     
-    test_progress_bar = tqdm.tqdm(test_loader, desc='Testing')
+    test_progress_bar = tqdm(test_loader, desc='Testing')
     
     with torch.no_grad():
         for sample in test_progress_bar:
