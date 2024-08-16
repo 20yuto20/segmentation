@@ -11,7 +11,7 @@ from dataloader import get_dataloader
 from train_val import train, val, test
 from set_cfg import setup_config, add_config
 from randaugment import reset_cfg
-# from affinity import Affinity, get_affinity_init
+from affinity import Affinity, get_affinity_init
 from utils.suggest import (
     setup_device,
     fixed_r_seed,
@@ -28,8 +28,6 @@ from utils.common import (
     save_learner,
     lr_step
 )
-
-print("giselle")
 
 def main(cfg):
     # if single-pass, set cfg for init phase
@@ -58,6 +56,7 @@ def main(cfg):
     if cfg.save.affinity or cfg.save.affinity_all:
         affinity_path = (cfg.out_dir + "affinity.csv")
         aff = Affinity(cfg, device)
+        affinity_df = pd.DataFrame()
         
     print(OmegaConf.to_yaml(cfg))
     start = time.time()
@@ -104,7 +103,7 @@ def main(cfg):
             train_loader, _, _ = get_dataloader(cfg)
 
         # if affinity at each epoch calc
-        elif cfg.save.affinity_all and epoch % 2 == 0:
+        elif cfg.save.affinity_all and epoch % cfg.save.interval == 0:
             affinity_df = aff.calculate_affinity(model, val_mAP, epoch, affinity_df)
             affinity_df.to_csv(affinity_path, index=False)
         

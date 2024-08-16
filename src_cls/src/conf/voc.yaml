@@ -3,7 +3,7 @@ default:
   seed: 105
   output_dir: "output_cls"
   home_dir: "/homes/ykohata/code/devml/homes/ypark/code/seg/"
-  dataset_dir: "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/"
+  dataset_dir: "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit"
   deterministic: False
   parallel: False
   device_id: 0
