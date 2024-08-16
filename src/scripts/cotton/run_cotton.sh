@@ -26,7 +26,7 @@ python main.py voc \
     augment.ra.single="null" \
     augment.ra.init_epoch=20 \
     augment.ra.aff_calc="True" \
-    augment.ra.aff_model="/homes/ykohata/code/devml/homes/ypark/code/seg/output/Hflip/weights/best.pth" \
+    augment.ra.aff_model="/homes/ykohata/code/devml/homes/ypark/code/seg/output/aff_weight/seed2026/RA2_Random_Randmag/weights/best.pth" \
     save.affinity="True" \
     save.affinity_all="True" \
     save.interval=10 \
