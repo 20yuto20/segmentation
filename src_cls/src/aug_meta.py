@@ -130,7 +130,7 @@ class DefineAugmentSpace(nn.Module):
             "Equalize": (torch.tensor([0.0]), False),
         }
         if image_size[0] > 100:
-            space_dict["TranslateX"] = (torch.linspace(0.0, 100.0, num_bins), True)
+            space_dict["TranslateX"] = (torch.linspace(0.0, 70.0, num_bins), True)
             space_dict["TranslateY"] = space_dict["TranslateX"]
 
         return space_dict

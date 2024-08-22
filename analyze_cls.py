@@ -10,6 +10,10 @@ def process_directory(base_dir, seed_dirs):
         voc_dir = base_dir / seed / 'voc'
         for aug_dir in voc_dir.iterdir():
             if aug_dir.is_dir():
+                # Skip RA2_Random_Randmag directory
+                if aug_dir.name == 'RA2_Random_Randmag':
+                    continue
+                
                 if aug_dir.name.startswith('RA2_') and aug_dir.name.endswith('_Randmag'):
                     aug_name = aug_dir.name.split('_')[1]
                 else:
@@ -81,8 +85,8 @@ def visualize_test_mAP(results, output_dir):
 
 def main():
     current_dir = Path(os.path.dirname(os.path.abspath(__file__)))
-    base_dir = current_dir / 'output_cls'
-    result_dir = current_dir / 'result' / 'cls'
+    base_dir = current_dir / 'local' / 'output_cls'
+    result_dir = current_dir / 'result_v2' / 'cls'
     seed_dirs = ['seed2024', 'seed2025', 'seed2026']
     
     result_dir.mkdir(parents=True, exist_ok=True)

@@ -136,7 +136,7 @@ def get_composed_transform(cfg, phase):
                 transform_list.append(RandAugmentSegmentation(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude))
             elif aug_name == "nan":
                 pass
-            else:
+           else:
                 raise ValueError(f"Invalid Augment ... {aug_name}")
     
     if cfg.dataset.name == "voc":

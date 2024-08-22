@@ -28,7 +28,7 @@ augment:
   name: 
    - rcrop
   hp:
-    rcrop_pad: 237
+    rcrop_pad: 56
     # 画像サイズが475なことから
     # min: 475*0.5 = 237.5
     # max: 475*2 = 950
