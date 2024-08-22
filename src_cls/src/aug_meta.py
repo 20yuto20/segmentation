@@ -4,6 +4,7 @@ import math
 import torch
 from torch import Tensor, nn
 import torchvision.transforms.functional as F
+from torchvision import transforms as tf 
 
 from augment import Cutout, solarize_add
 
@@ -79,12 +80,14 @@ def _apply_op(
     elif op_name == "Solarize":
         img = F.solarize(img, magnitude)
     elif op_name == "AutoContrast":
-        img = F.autocontrast(img)
+        transform = tf.RandomAutocontrast(p=0.5)
+        img = transform(img)
     elif op_name == "Equalize":
-        past = img
-        img = F.equalize(img)
+        transform = tf.RandomEqualize(p=0.5)
+        img = transform(img)
     elif op_name == "Invert":
-        img = F.invert(img)
+        transform = tf.RandomInvert(p=0.5)
+        img = transform(img)
     elif op_name == "Identity":
         pass
     elif op_name == "Cutout":
@@ -115,8 +118,8 @@ class DefineAugmentSpace(nn.Module):
             "Identity": (torch.tensor([0.0]), False),
             "ShearX": (torch.linspace(0.0, 0.3, num_bins), True),
             "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
-            "TranslateX": (torch.linspace(0.0, 10.0, num_bins), True),
-            "TranslateY": (torch.linspace(0.0, 10.0, num_bins), True),
+            "TranslateX": (torch.linspace(0.0, 70.0, num_bins), True),
+            "TranslateY": (torch.linspace(0.0, 70.0, num_bins), True),
             "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
             "Brightness": (torch.linspace(0.1, 1.9, num_bins), True),
             "Color": (torch.linspace(0.1, 1.9, num_bins), True),
@@ -130,7 +133,7 @@ class DefineAugmentSpace(nn.Module):
             "Equalize": (torch.tensor([0.0]), False),
         }
         if image_size[0] > 100:
-            space_dict["TranslateX"] = (torch.linspace(0.0, 100.0, num_bins), True)
+            space_dict["TranslateX"] = (torch.linspace(0.0, 70.0, num_bins), True)
             space_dict["TranslateY"] = space_dict["TranslateX"]
 
         return space_dict

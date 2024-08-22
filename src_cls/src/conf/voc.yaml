@@ -28,15 +28,8 @@ augment:
   name: 
    - rcrop
   hp:
-    rcrop_pad: 237
-    # 画像サイズが475なことから
-    # min: 475*0.5 = 237.5
-    # max: 475*2 = 950
-    # maxと元の画像の差: 950-475 = 475
-    # 475/2 = 237.5
-    # よって237pix
-
-    cutout_p: 1.0
+    rcrop_pad: 75
+    cutout_p: 0.5
     cutout_size: 0.5
     ra_p: 1.0
     
@@ -44,7 +37,7 @@ augment:
     space: "ra"
     weight: single # 第一段階ではsingle
     single: Contrast # 第一段階では特定のDA選択
-    num_op: 2
+    num_op: 1
     magnitude: 14
     random_magnitude: True
     softmax_t: 0.5

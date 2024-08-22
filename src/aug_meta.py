@@ -264,8 +264,8 @@ class DefineAugmentSpace(nn.Module):
             "Identity": (torch.tensor([0.0]), False),
             "ShearX": (torch.linspace(0.0, 0.3, num_bins), True),
             "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
-            "TranslateX": (torch.linspace(0.0, 10.0, num_bins), True),
-            "TranslateY": (torch.linspace(0.0, 10.0, num_bins), True),
+            "TranslateX": (torch.linspace(0.0, 148.0, num_bins), True),
+            "TranslateY": (torch.linspace(0.0, 148.0, num_bins), True),
             "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
             "Brightness": (torch.linspace(0.1, 1.9, num_bins), True),
             "Color": (torch.linspace(0.1, 1.9, num_bins), True),
@@ -285,7 +285,7 @@ class DefineAugmentSpace(nn.Module):
         if image_size[0] > 100:
             space_dict["TranslateX"] = (torch.linspace(0.0, 148.0, num_bins), True)
             space_dict["TranslateY"] = space_dict["TranslateX"]
-
+            
         return space_dict
 
 

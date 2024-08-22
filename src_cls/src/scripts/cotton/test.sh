@@ -13,12 +13,12 @@ echo "ok"
 
 cd $WORKDIR
 
-seed=10001
+seed=2024
 python main.py voc \
     default.seed=$seed \
-    learn.n_epoch=1 \
+    learn.n_epoch=50 \
     learn.batch_size=32 \
-    augment.name=["ra"] \
+    augment.name=["rcrop"] \
     augment.ra.weight="single" \
     augment.ra.single="SolarizeAdd" \
     && python notify.py 0 || python notify.py 1

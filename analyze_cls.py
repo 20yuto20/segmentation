@@ -10,7 +10,7 @@ def process_directory(base_dir, seed_dirs):
         voc_dir = base_dir / seed / 'voc'
         for aug_dir in voc_dir.iterdir():
             if aug_dir.is_dir():
-                if aug_dir.name.startswith('RA2_') and aug_dir.name.endswith('_Randmag'):
+                if aug_dir.name.startswith('RA1_') and aug_dir.name.endswith('_Randmag'):
                     aug_name = aug_dir.name.split('_')[1]
                 else:
                     aug_name = aug_dir.name
