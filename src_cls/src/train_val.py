@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import average_precision_score
 import numpy as np
+import time
 
 def accuracy(output, target):
     pred = (output > 0.5).float()
@@ -78,7 +79,6 @@ def val(model, device, val_loader, criterion):
     mAP = np.mean(ap_scores)
     
     return val_loss / n_samples, val_acc / n_samples, mAP
-
 def test(model, device, test_loader, criterion, cfg):
     model.eval()
     test_loss = 0
@@ -88,15 +88,23 @@ def test(model, device, test_loader, criterion, cfg):
     all_outputs = []
     all_targets = []
     
+    total_inference_time = 0.0
+    
     with torch.no_grad():
         for batch in tqdm(test_loader):
             data, target = batch['image'].to(device), batch['label'].to(device)
-            output = model(data)
-            loss = criterion(output, target)
             
+            start_time = time.perf_counter()
+            output = model(data)
+            end_time = time.perf_counter()
+            
+            inference_time = end_time - start_time
+            total_inference_time += inference_time
+            n_samples += data.size(0)
+            
+            loss = criterion(output, target)
             test_loss += loss.item() * data.size(0)
             test_acc += accuracy(output, target) * data.size(0)
-            n_samples += data.size(0)
             
             all_outputs.append(output.cpu().numpy())
             all_targets.append(target.cpu().numpy())
@@ -110,5 +118,7 @@ def test(model, device, test_loader, criterion, cfg):
         ap_scores.append(ap)
     
     mAP = np.mean(ap_scores)
+    average_inference_time = total_inference_time / n_samples
     
-    return test_loss / n_samples, test_acc / n_samples, mAP
+    return test_loss / n_samples, test_acc / n_samples, mAP, average_inference_time
+    # return test_loss / n_samples, test_acc / n_samples, mAP

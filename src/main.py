@@ -129,10 +129,17 @@ def main(cfg):
     best_model_path = cfg.out_dir + "weights/best.pth"
     model.load_state_dict(torch.load(best_model_path))
 
-    test_mIoU, test_Acc = test(cfg, device, model, test_loader, criterion)
+    # テスト実行と結果取得
+    # test関数の呼び出しを以下のように変更
+    test_mIoU, test_Acc, average_inference_time = test(cfg, device, model, test_loader, criterion)
     print(f"Final Test Results - Test Accuracy: {test_Acc:.4f}, Test mIoU: {test_mIoU:.4f}")
 
-    test_result = {"test_mIoU": test_mIoU, "test_Acc": test_Acc}
+    # テスト結果の辞書に平均推論時間を追加
+    test_result = {
+        "test_mIoU": test_mIoU, 
+        "test_Acc": test_Acc,
+        "avg_inference_time": average_inference_time  # train_val.pyから返される値
+    }
 
     if len(all_training_result) > 0:
         train_df = pd.DataFrame(all_training_result)
@@ -145,7 +152,12 @@ def main(cfg):
     print(f"Train results saved to: {cfg.out_dir}train_output.csv")
     print(f"Test results saved to: {cfg.out_dir}test_output.csv")
 
-    add_config(cfg, {"test_acc": float(test_Acc), "test_mIoU": float(test_mIoU)})
+    # 設定ファイルに結果を追加
+    add_config(cfg, {
+        "test_acc": float(test_Acc), 
+        "test_mIoU": float(test_mIoU),
+        "avg_inference_time": float(average_inference_time)  # 新しく追加
+    })
     add_config(cfg, {"total_training_time": str(total_training_time['time'])})
 
 if __name__ == "__main__":

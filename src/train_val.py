@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import tqdm
 from utils.common import AverageMeter, intersectionAndUnionGPU
+import time
 
 def get_pred(y):
     if isinstance(y, torch.Tensor):
@@ -149,6 +150,9 @@ def test(cfg, device, model, test_loader, criterion):
     target_meter = AverageMeter()
     
     test_progress_bar = tqdm.tqdm(test_loader, desc='Testing')
+
+    total_inference_time = 0.0 # 合計推論時間を保存する変数
+    total_samples = 0  # テストデータセットのサンプル数
     
     for sample in test_progress_bar:
         image, label = sample['image'].to(device), sample['label'].to(device)
@@ -158,8 +162,15 @@ def test(cfg, device, model, test_loader, criterion):
         
         label = label.long()
 
+        start_time = time.perf_counter()  # 推論開始時間を記録
+
         with torch.no_grad():
             output = model(image)
+
+        end_time = time.perf_counter()  # 推論終了時間を記録
+        inference_time = end_time - start_time  # 推論時間を計算
+        total_inference_time += inference_time  # 推論時間を合計に追加
+        total_samples += image.size(0)  # テストデータセットのサンプル数を更新
         
         loss = criterion(output, label)
         pred = get_pred(output)
@@ -175,4 +186,7 @@ def test(cfg, device, model, test_loader, criterion):
     allAcc = sum(intersection_meter.sum) / (sum(target_meter.sum) + 1e-10)
     
     print(f"Test Results - Accuracy: {allAcc:.4f}, mIoU: {mIoU:.4f}")
+    # 平均推論時間を計算して表示
+    average_inference_time = total_inference_time / total_samples if total_samples > 0 else 0
+    print(f"Test Inference Time(avg seconds / sample): {average_inference_time:.6f}")
     return mIoU, allAcc

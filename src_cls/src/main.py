@@ -129,30 +129,25 @@ def main(cfg):
     interval = time.time() - start
     interval = get_time(interval)
 
-    test_loss, _, test_mAP = test(model, device, test_loader, loss_func, cfg)
+    test_loss, _, test_mAP, avg_inference_time = test(model, device, test_loader, loss_func, cfg)
 
-    # GPUテンソルをCPUに移動し、Pythonのネイティブ型に変換
     test_loss = test_loss.cpu().item() if isinstance(test_loss, torch.Tensor) else test_loss
-    # test_acc = test_acc.cpu().item() if isinstance(test_acc, torch.Tensor) else test_acc
     test_mAP = test_mAP.cpu().item() if isinstance(test_mAP, torch.Tensor) else test_mAP
 
     print(
         f"time: {interval['time']} \t"
         +f"test loss: {test_loss:.6f} \t"
-        # +f"test acc: {test_acc:.6f} \t"
         +f"test mAP: {test_mAP:.6f} \t"
+        +f"avg inference time: {avg_inference_time:.6f} sec/sample"
     )
 
-    # DataFrameに新しい行を追加
     new_row = pd.DataFrame({
         "train_loss": [np.nan],
-        # "train_acc": [np.nan],
         "val_loss": [np.nan],
-        # "val_acc": [np.nan],
         "val_mAP": [np.nan],
         "test_loss": [test_loss],
-        # "test_acc": [test_acc],
-        "test_mAP": [test_mAP]
+        "test_mAP": [test_mAP],
+        "avg_inference_time": [avg_inference_time]
     })
     all_training_result = pd.concat([all_training_result, new_row], ignore_index=True)
     all_training_result.to_csv(save_file_path, index=False)
