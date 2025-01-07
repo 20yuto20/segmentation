@@ -3,6 +3,7 @@ import os
 import random
 from PIL import Image
 import xml.etree.ElementTree as ET
+import json
 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
@@ -11,6 +12,83 @@ import torch
 from utils.common import show_img
 from augment import Cutout
 from randaugment import RandAugment
+
+class TinyImageNetDatasetLoader(Dataset):
+    def __init__(self, root, split, img_size, transform=None):
+        super().__init__()
+        self.root = root
+        self.split = split
+        self.transform = transform
+        self.img_size = img_size
+        
+        self.images = []
+        self.labels = []
+        
+        if split == 'train':
+            self.data_dir = os.path.join(root, 'train')
+            self._load_train_data()
+        elif split == 'val':
+            self.data_dir = os.path.join(root, 'val')
+            self._load_val_data()
+        elif split == 'test':
+            self.data_dir = os.path.join(root, 'test')
+            self._load_test_data()
+            
+    def _load_train_data(self):
+        for class_dir in os.listdir(self.data_dir):
+            class_path = os.path.join(self.data_dir, class_dir, 'images')
+            class_idx = self.class_to_idx[class_dir]
+            for img_name in os.listdir(class_path):
+                img_path = os.path.join(class_path, img_name)
+                self.images.append(img_path)
+                label = torch.zeros(200)
+                label[class_idx] = 1
+                self.labels.append(label)
+                
+    def _load_val_data(self):
+        annotations_file = os.path.join(self.data_dir, 'val_annotations.txt')
+        with open(annotations_file, 'r') as f:
+            for line in f:
+                img_name, class_dir = line.strip().split('\t')[:2]
+                img_path = os.path.join(self.data_dir, 'images', img_name)
+                class_idx = self.class_to_idx[class_dir]
+                self.images.append(img_path)
+                label = torch.zeros(200)
+                label[class_idx] = 1
+                self.labels.append(label)
+                
+    def _load_test_data(self):
+        images_dir = os.path.join(self.data_dir, 'images')
+        for img_name in os.listdir(images_dir):
+            img_path = os.path.join(images_dir, img_name)
+            self.images.append(img_path)
+            # For test set, we'll use dummy labels
+            self.labels.append(torch.zeros(200))
+
+    def __getitem__(self, index):
+        image_path = self.images[index]
+        label = self.labels[index]
+        
+        image = Image.open(image_path).convert("RGB")
+        resize_fn = transforms.Resize((self.img_size, self.img_size))
+        image = resize_fn(image)
+        if self.transform is not None:
+            image = self.transform(image)
+            
+        return {"image": image, "label": label}
+
+    def __len__(self):
+        return len(self.images)
+
+    @property
+    def class_to_idx(self):
+        if not hasattr(self, '_class_to_idx'):
+            self._class_to_idx = {}
+            wnids_path = os.path.join(self.root, 'wnids.txt')
+            with open(wnids_path, 'r') as f:
+                for idx, line in enumerate(f):
+                    self._class_to_idx[line.strip()] = idx
+        return self._class_to_idx
 
 class VOCDatasetLoader(Dataset):
     def __init__(self, root, year, image_set, img_size, transform=None):
@@ -87,13 +165,17 @@ def get_dataloader(cfg):
         random.seed(worker_id+cfg.default.seed)
 
     dataset_path = f"{cfg.default.dataset_dir}"
-
     train_transform = get_composed_transform(cfg, "train")
     test_transform = get_composed_transform(cfg, "test")
 
-    train_dataset = VOCDatasetLoader(dataset_path, '2012', 'train', cfg.dataset.resized_size, train_transform)
-    val_dataset = VOCDatasetLoader(dataset_path, '2012', 'val', cfg.dataset.resized_size, test_transform)
-    test_dataset = VOCDatasetLoader(dataset_path, '2007', 'test', cfg.dataset.resized_size, test_transform)
+    if cfg.dataset.name == "tiny_imagenet":
+        train_dataset = TinyImageNetDatasetLoader(dataset_path, 'train', cfg.dataset.resized_size, train_transform)
+        val_dataset = TinyImageNetDatasetLoader(dataset_path, 'val', cfg.dataset.resized_size, test_transform)
+        test_dataset = TinyImageNetDatasetLoader(dataset_path, 'test', cfg.dataset.resized_size, test_transform)
+    else:
+        train_dataset = VOCDatasetLoader(dataset_path, '2012', 'train', cfg.dataset.resized_size, train_transform)
+        val_dataset = VOCDatasetLoader(dataset_path, '2012', 'val', cfg.dataset.resized_size, test_transform)
+        test_dataset = VOCDatasetLoader(dataset_path, '2007', 'test', cfg.dataset.resized_size, test_transform)
 
     print("train_data: {}".format(len(train_dataset)))
     print("val_data: {}".format(len(val_dataset)))
@@ -172,17 +254,6 @@ def get_composed_transform(cfg, phase):
                     RandAugment(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude)
                 )
 
-            # elif aug_name == "ra":
-            #     transform_list = transform_list + [
-            #         transforms.RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad),
-            #         transforms.RandomHorizontalFlip(p=0.5),
-            #         transforms.RandomApply(
-            #             [RandAugment(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude),
-            #             Cutout(n_holes=1, img_size=cfg.dataset.resized_size, patch_size=cfg.augment.hp.cutout_size)],
-            #             p=cfg.augment.hp.ra_p
-            #             )
-            #         ]
-            
             elif aug_name == "nan":
                 pass
                 
@@ -254,4 +325,3 @@ def val_loader_transform(cfg):
     )
 
     return val_loader, train_transform
-

@@ -13,7 +13,9 @@ echo "ok"
 
 cd $WORKDIR
 
-seed=202517
+seed=8
+
+# # For voc
 python main.py voc \
     default.seed=$seed \
     learn.n_epoch=50 \
@@ -22,3 +24,16 @@ python main.py voc \
     augment.ra.weight="single" \
     augment.ra.single="hflip" \
     && python notify.py 0 || python notify.py 1
+
+# # For tiny-imagenet
+# python main.py voc \
+#     default.seed=$seed \
+#     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/tiny-imagenet-200/" \
+#     learn.n_epoch=5 \
+#     learn.batch_size=128 \
+#     augment.name=["hflip"] \
+#     augment.ra.weight="single" \
+#     augment.ra.single="hflip" \
+#     dataset.name="tiny_imagenet" \
+#     dataset.n_class=200 \
+#     && python notify.py 0 || python notify.py 1

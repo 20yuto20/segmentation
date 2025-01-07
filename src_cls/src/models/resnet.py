@@ -1,6 +1,6 @@
+import torch
 import torch.nn as nn
-import math
-import torch.utils.model_zoo as model_zoo
+from torch.hub import load_state_dict_from_url
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152', 'resnet200']
@@ -18,6 +18,12 @@ def conv3x3(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=1, bias=False)
 
+def resnet50(pretrained=False):
+    model = ResNet(Bottleneck, [3, 4, 6, 3])
+    if pretrained:
+        model.load_state_dict(load_state_dict_from_url(model_urls['resnet50']))
+    model.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+    return model
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -171,16 +177,13 @@ def resnet34(pretrained=False, **kwargs):
     return model
 
 
-def resnet50(pretrained=False, **kwargs):
-    """Constructs a ResNet-50 model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
+def resnet50(pretrained=False):
+    model = ResNet(Bottleneck, [3, 4, 6, 3])
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
+        model.load_state_dict(torch.hub.load_state_dict_from_url(model_urls['resnet50']))
+    # Modify the average pooling layer for 64x64 inputs
+    model.avgpool = nn.AdaptiveAvgPool2d((1, 1))
     return model
-
 
 def resnet101(pretrained=False, **kwargs):
     """Constructs a ResNet-101 model.
