@@ -13,7 +13,7 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=202517
+seed=201
 python main.py voc \
     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc_aug/" \
     default.seed=$seed \
@@ -21,5 +21,5 @@ python main.py voc \
     learn.batch_size=8 \
     augment.name=["hflip"] \
     augment.ra.weight="single" \
-    augment.ra.single="hfilp" \
+    augment.ra.single="Rotate" \
     && python notify.py 0 || python notify.py 1

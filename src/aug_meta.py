@@ -8,6 +8,7 @@ from PIL import ImageOps, Image
 import torch
 import torchvision.transforms.functional as F
 from torch import Tensor, nn
+from torchvision import transforms as tf
 
 from augment import Cutout, solarize_add
 
@@ -185,11 +186,13 @@ def _apply_op(
         # ラベルには適用しない
     # FIXME: NOT applied
     elif op_name == "Invert":
+        transform = tf.RandomInvert(p=0.5)
+        img = transform(img)
         
         # original_pix = np.array(img)
         # print(f"orignal pixel: {original_pix}")
         
-        img = ImageOps.invert(img)
+        # img = ImageOps.invert(img)
         
         # inverted_pix = np.array(img)
         # print(f"inverted pix: {inverted_pix}")
@@ -267,9 +270,9 @@ class DefineAugmentSpace(nn.Module):
             "TranslateX": (torch.linspace(0.0, 148.0, num_bins), True),
             "TranslateY": (torch.linspace(0.0, 148.0, num_bins), True),
             "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
-            "Brightness": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Brightness": (torch.linspace(0.1, 0.9, num_bins), True),
             "Color": (torch.linspace(0.1, 1.9, num_bins), True),
-            "Contrast": (torch.linspace(0.1, 1.9, num_bins), True),
+            "Contrast": (torch.linspace(0.1, 0.9, num_bins), True),
             "Sharpness": (torch.linspace(0.1, 1.9, num_bins), True),
             "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 4)).round().int(), False),
             "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),

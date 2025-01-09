@@ -189,4 +189,4 @@ def test(cfg, device, model, test_loader, criterion):
     # 平均推論時間を計算して表示
     average_inference_time = total_inference_time / total_samples if total_samples > 0 else 0
     print(f"Test Inference Time(avg seconds / sample): {average_inference_time:.6f}")
-    return mIoU, allAcc
+    return mIoU, allAcc, average_inference_time  # Changed here to return 3 values    return mIoU, allAcc

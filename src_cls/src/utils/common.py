@@ -30,15 +30,6 @@ def plot_log(cfg, data):
     ax[0].tick_params(labelsize=25)
     ax[0].grid()
 
-    # ax[1].plot(epochs, data["train_acc"][:-3], label='Training', alpha=0.8, linewidth=5)
-    # ax[1].plot(epochs, data["val_acc"][:-3], label='Validation', alpha=0.8, linewidth=5)
-    # ax[1].set_title('Accuracy', fontsize=30)
-    # ax[1].set_xlabel('Epochs', fontsize=25)
-    # ax[1].set_ylabel('Accuracy', fontsize=25)
-    # ax[1].legend(bbox_to_anchor=(1, 0), loc="lower right", borderaxespad=0.2, fontsize=30, ncol=1)
-    # ax[1].tick_params(labelsize=25)
-    # ax[1].grid()
-
     ax[1].plot(epochs, data["val_mAP"][:-3], label='Validation', alpha=0.8, linewidth=5)
     ax[1].set_title('mAP', fontsize=30)
     ax[1].set_xlabel('Epochs', fontsize=25)
@@ -55,22 +46,47 @@ def plot_log(cfg, data):
 
 # show sample 12 imgs
 def show_img(cfg, dataloader):
+    """
+    - 12枚の画像を取り出して表示する
+    - データ拡張が行われている場合は、各画像上部に 'DA: {ファイル名}' を表示する
+    - 色合いを元に戻す（逆正規化）してからimshowする
+    """
+    # バッチを1つ取得
     for batched in dataloader:
         images = batched["image"]
         labels = batched["label"]
+        filenames = batched["filename"] if "filename" in batched else None
         break
-    
+
+    # 逆正規化のためのmean, stdをtensor化
+    mean = torch.tensor(cfg.dataset.mean, dtype=torch.float32).view(1, -1, 1, 1)
+    std = torch.tensor(cfg.dataset.std, dtype=torch.float32).view(1, -1, 1, 1)
+
     fig, axes = plt.subplots(3, 4, figsize=(12, 9))
+    # もしaugment.nameが存在し、かつ['nan']でないなら「拡張されている」とみなす
+    is_augmented = (len(cfg.augment.name) > 0 and "nan" not in cfg.augment.name)
+
     for i in range(12):
         ax = axes[i // 4, i % 4]
-        img = np.transpose(images[i].numpy(), (1, 2, 0))  
+        
+        # i番目の画像を取り出し、逆正規化
+        img_tensor = images[i].unsqueeze(0)  # shape: (1, C, H, W)
+        img_tensor = img_tensor * std + mean  # unnormalize
+        img_tensor = torch.clamp(img_tensor, 0, 1)  # [0,1]にクリップ
+
+        # numpy変換
+        img = img_tensor.squeeze(0).permute(1, 2, 0).cpu().numpy()  # shape: (H, W, C)
+
         ax.imshow(img)
-        ax.set_title(f"Label: {labels[i]}")
         ax.axis('off')
+
+        # データ拡張が有効の場合、タイトルにファイル名を表示
+        if is_augmented and filenames is not None:
+            if i < len(filenames):
+                ax.set_title(f"ID: {filenames[i]}", fontsize=9)
 
     plt.savefig(cfg.out_dir + "img.png")
     plt.close()
-
 
 
 # plot the num of selected method (read from csv file)
@@ -140,9 +156,7 @@ def save_all_learner(cfg, model, device, epoch):
     model.to(device)
 
 def lr_step(cfg, scheduler, epoch):
-        if cfg.optimizer.scheduler.name == "warmup":
-            scheduler.step(epoch)
-
-        else:
-            scheduler.step()
-
+    if cfg.optimizer.scheduler.name == "warmup":
+        scheduler.step(epoch)
+    else:
+        scheduler.step()

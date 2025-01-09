@@ -70,12 +70,20 @@ class TinyImageNetDatasetLoader(Dataset):
         label = self.labels[index]
         
         image = Image.open(image_path).convert("RGB")
-        resize_fn = transforms.Resize((self.img_size, self.img_size))
+        # リサイズ時の補間をBILINEARに指定
+        resize_fn = transforms.Resize((self.img_size, self.img_size), interpolation=transforms.InterpolationMode.BILINEAR)
         image = resize_fn(image)
         if self.transform is not None:
             image = self.transform(image)
-            
-        return {"image": image, "label": label}
+
+        # 画像のファイル名を返す (フルパスではなく、basenameのみにする場合は下記を変更)
+        filename = os.path.basename(image_path)
+        
+        return {
+            "image": image,
+            "label": label,
+            "filename": filename
+        }
 
     def __len__(self):
         return len(self.images)
@@ -89,6 +97,7 @@ class TinyImageNetDatasetLoader(Dataset):
                 for idx, line in enumerate(f):
                     self._class_to_idx[line.strip()] = idx
         return self._class_to_idx
+
 
 class VOCDatasetLoader(Dataset):
     def __init__(self, root, year, image_set, img_size, transform=None):
@@ -140,12 +149,20 @@ class VOCDatasetLoader(Dataset):
         label = self.labels[index]
         
         image = Image.open(image_path).convert("RGB")
-        resize_fn = transforms.Resize((self.img_size, self.img_size))
+        # リサイズ時の補間をBILINEARに指定
+        resize_fn = transforms.Resize((self.img_size, self.img_size), interpolation=transforms.InterpolationMode.BILINEAR)
         image = resize_fn(image)
         if self.transform is not None:
             image = self.transform(image)
-            
-        return {"image": image, "label": label}
+
+        # 画像のファイル名
+        filename = os.path.basename(image_path)
+        
+        return {
+            "image": image,
+            "label": label,
+            "filename": filename
+        }
 
     def __len__(self):
         return len(self.images)
@@ -156,9 +173,13 @@ class VOCDatasetLoader(Dataset):
 
     @property
     def classes(self):
-        return ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow',
-                'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa',
-                'train', 'tvmonitor']
+        return [
+            'aeroplane', 'bicycle', 'bird', 'boat', 'bottle',
+            'bus', 'car', 'cat', 'chair', 'cow',
+            'diningtable', 'dog', 'horse', 'motorbike', 'person',
+            'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor'
+        ]
+
 
 def get_dataloader(cfg):
     def worker_init_fn(worker_id):
@@ -224,23 +245,19 @@ def get_composed_transform(cfg, phase):
     transform_list = []
 
     if phase == "train":
-
         for aug_name in cfg.augment.name:
             if aug_name == "rcrop":
                 transform_list.append(
                     transforms.RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad)
                 )
-
             elif aug_name == "hflip":
                 transform_list.append(
                     transforms.RandomHorizontalFlip(p=0.5)
                 )
-            
             elif aug_name == "vflip":
                 transform_list.append(
                     transforms.RandomVerticalFlip(p=0.5)
                 )
-
             elif aug_name == "cutout":
                 transform_list.append(
                     transforms.RandomApply(
@@ -248,61 +265,25 @@ def get_composed_transform(cfg, phase):
                         p=cfg.augment.hp.cutout_p
                     )
                 )
-                
             elif aug_name == "ra":
                 transform_list.append(
                     RandAugment(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude)
                 )
-
             elif aug_name == "nan":
                 pass
-                
             else:
-                    raise ValueError (f"Invalid Augment ... {aug_name}")
+                raise ValueError (f"Invalid Augment ... {aug_name}")
        
     transform_list = transform_list + [
         transforms.ToTensor(),
         transforms.Normalize(cfg.dataset.mean, cfg.dataset.std)
-        ]
+    ]
         
     transform_list = transforms.Compose(transform_list)
 
     return transform_list
 
 
-        
-# AffinityDataset クラスを VOC 用に修正
-class AffinityDataset():
-    def __init__(self, cfg, name):
-        self.cfg = cfg.copy()
-        self.cfg.augment.dynamic=False
-        self.cfg.augment.name=["rand"]
-        self.cfg.augment.rand.weight="single"
-        self.cfg.augment.rand.num_op=1
-        self.cfg.augment.rand.single=name
-        self.size=cfg.dataset.resized_size
-
-    def dataloader(self):
-        train_transform, test_transform = get_composed_transform(self.cfg)
-
-        dataset_path = f"{self.cfg.default.dataset_dir}"+ f"{self.cfg.dataset.name}" 
-        # use train_transform for val dataset
-        val_dataset = VOCDatasetLoader(dataset_path, '2012', 'val', self.cfg.dataset.resized_size, train_transform)
-
-        val_loader = DataLoader(
-            val_dataset,
-            batch_size=self.cfg.learn.batch_size,
-            num_workers=self.cfg.default.num_workers,
-            shuffle=False,
-            pin_memory=True,
-            persistent_workers=True,
-            drop_last=False,
-        )
-    
-        return val_loader
-
-
-# 何も変換なしのval loaderとtransfromを返す
 def val_loader_transform(cfg):
     cfg = cfg.copy()
     cfg.augment.dynamic=False
@@ -312,7 +293,7 @@ def val_loader_transform(cfg):
 
     dataset_path = f"{cfg.default.dataset_dir}"+ f"{cfg.dataset.name}" 
     # use train_transform for val dataset
-    val_dataset = VOCDatasetLoader(dataset_path, "val", cfg.dataset.resized_size, test_transform)
+    val_dataset = VOCDatasetLoader(dataset_path, "2012", cfg.dataset.resized_size, test_transform)
 
     val_loader = DataLoader(
         val_dataset,
