@@ -31,29 +31,39 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-def visualize_samples(dataloader, num_samples=5):
+def denormalize_image(tensor: torch.Tensor, mean: list, std: list) -> torch.Tensor:
+    """
+    データローダー側で正規化したイメージテンソルを逆正規化して可視化向けに戻す.
+    tensor: (C, H, W), 値は標準化済み
+    mean, std: cfg.dataset.mean, cfg.dataset.std
+    """
+    # ここでは mean, std が RGB 各チャネルの値を想定
+    for c in range(tensor.shape[0]):
+        tensor[c] = tensor[c] * std[c] + mean[c]
+    # 値を [0,1] 範囲に制限 (正確には元データの状況に合わせてクリップ)
+    tensor.clamp_(0.0, 1.0)
+    return tensor
+
+def visualize_samples(dataloader, num_samples=5, mean=None, std=None):
+    """サンプル画像を描画する関数。色味が変わらないように逆正規化して可視化する。"""
     samples = next(iter(dataloader))
     images, labels = samples['image'], samples['label']
 
-    # color_palette = []
-    # for i in range(20):
-    #     color_palette.append([i, i, i])
-    # color_palette = np.array(color_palette)
-
+    # num_samplesだけ可視化
     for i in range(min(num_samples, len(images))):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-        
-        # 画像の表示
-        img = images[i].permute(1, 2, 0).numpy()
-        img = (img - img.min()) / (img.max() - img.min())  # 正規化
-        ax1.imshow(img)
-        ax1.set_title("Input Image")
-        
-        # ラベルの表示
-        label = labels[i].squeeze().numpy()  # チャンネル次元を削除
-        # label = color_palette[label]    # カラーパレットに従ってRGBに変更
-        # label = (label - label.min()) / (label.max() - label.min())
-        # ax2.imshow(label, cmap='jet')  # カラーマップを使用
+
+        # ---- 修正ここから: min-maxスケーリングを廃止し、denormalize ----
+        # (C, H, W) → (H, W, C) に変換してから可視化
+        img_clone = images[i].clone()
+        img_denorm = denormalize_image(img_clone, mean, std)  # 逆正規化
+        img_np = img_denorm.permute(1, 2, 0).cpu().numpy()    # NumPy化
+        ax1.imshow(img_np)
+        ax1.set_title("Input Image (denormalized)")
+        # ---- 修正ここまで ----
+
+        # ラベル表示
+        label = labels[i].squeeze().cpu().numpy()
         ax2.imshow(label)
         ax2.set_title("Label")
         
@@ -68,7 +78,6 @@ def visualize_samples(dataloader, num_samples=5):
         plt.savefig(file_path)
         plt.close()
 
-
 def main(cfg):
     device = setup_device(cfg)
     fixed_r_seed(cfg)
@@ -78,11 +87,15 @@ def main(cfg):
 
     optimizer = suggest_optimizer(cfg, model)
     scheduler = suggest_scheduler(cfg, optimizer)
-
     criterion = suggest_loss_func(cfg)
     criterion.to(device)
 
     train_loader, val_loader, test_loader = get_dataloader(cfg)
+
+    # optional: visualize a few samples from train_loader
+    # ここで画像を可視化する際、逆正規化にcfgのmeanとstdを渡す
+    # mean, stdを必ずlistかタプルで渡す
+    visualize_samples(train_loader, num_samples=3, mean=cfg.dataset.mean, std=cfg.dataset.std)
 
     evaluator = Evaluator(cfg.dataset.n_class)
 
@@ -126,19 +139,19 @@ def main(cfg):
     total_training_time = get_time(end_time - start_time)
     print(f"Total training {total_training_time}")
     
+    # best model を読み込み
     best_model_path = cfg.out_dir + "weights/best.pth"
     model.load_state_dict(torch.load(best_model_path))
 
-    # テスト実行と結果取得
-    # test関数の呼び出しを以下のように変更
+    # テスト実行
     test_mIoU, test_Acc, average_inference_time = test(cfg, device, model, test_loader, criterion)
     print(f"Final Test Results - Test Accuracy: {test_Acc:.4f}, Test mIoU: {test_mIoU:.4f}")
 
-    # テスト結果の辞書に平均推論時間を追加
+    # 結果を保存
     test_result = {
         "test_mIoU": test_mIoU, 
         "test_Acc": test_Acc,
-        "avg_inference_time": average_inference_time  # train_val.pyから返される値
+        "avg_inference_time": average_inference_time
     }
 
     if len(all_training_result) > 0:
@@ -152,11 +165,10 @@ def main(cfg):
     print(f"Train results saved to: {cfg.out_dir}train_output.csv")
     print(f"Test results saved to: {cfg.out_dir}test_output.csv")
 
-    # 設定ファイルに結果を追加
     add_config(cfg, {
         "test_acc": float(test_Acc), 
         "test_mIoU": float(test_mIoU),
-        "avg_inference_time": float(average_inference_time)  # 新しく追加
+        "avg_inference_time": float(average_inference_time)
     })
     add_config(cfg, {"total_training_time": str(total_training_time['time'])})
 

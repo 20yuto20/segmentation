@@ -5,13 +5,13 @@ import numpy as np
 from pathlib import Path
 
 def get_aug_name(dir_name):
-    if dir_name.startswith('RA2_') and dir_name.endswith('_Randmag'):
+    if dir_name.startswith('RA1_') and dir_name.endswith('_Randmag'):
         return dir_name.split('_')[1]
     return dir_name
 
 def process_directory(base_dir):
     results = {'val_mIoU': {}, 'test_mIoU': {}}
-    for seed in ['seed2024', 'seed2025', 'seed2026']:
+    for seed in ['seed201', '', '']:
         voc_dir = base_dir / seed / 'voc'
         if not voc_dir.exists():
             print(f"Warning: Directory {voc_dir} does not exist. Skipping.")

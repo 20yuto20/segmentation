@@ -13,37 +13,37 @@ def get_pred(y):
         out = y[0]
     return torch.argmax(out, dim=1)
 
+def denormalize_image(tensor: torch.Tensor, mean: list, std: list) -> torch.Tensor:
+    """
+    データセットで正規化した画像を可視化向けに逆正規化する関数.
+    """
+    for c in range(tensor.shape[0]):
+        tensor[c] = tensor[c] * std[c] + mean[c]
+    # [0,1]にクリップ
+    tensor.clamp_(0.0, 1.0)
+    return tensor
+
 def visualize_results(cfg, epoch, image, label, pred, phase):
     debug_dir = os.path.join(cfg.out_dir, "debug")
     os.makedirs(debug_dir, exist_ok=True)
 
-    for j in range(min(3, image.shape[0])):  # Visualize up to 3 samples
+    # バッチ内から最大3枚だけ可視化
+    for j in range(min(3, image.shape[0])):  
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
         
-        # Convert image to numpy if it's a tensor
-        if isinstance(image, torch.Tensor):
-            img = image[j].cpu().permute(1, 2, 0).numpy()
-        else:
-            img = image[j].transpose(1, 2, 0)
-        
-        ax1.imshow(img)
-        ax1.set_title("Input Image")
-        
-        # Convert label to numpy if it's a tensor
-        if isinstance(label, torch.Tensor):
-            lbl = label[j].cpu().numpy()
-        else:
-            lbl = label[j]
-        
+        # ---- 修正ここから: 逆正規化してから表示 ----
+        img_clone = image[j].clone().cpu()
+        img_denorm = denormalize_image(img_clone, cfg.dataset.mean, cfg.dataset.std)
+        img_np = img_denorm.permute(1, 2, 0).numpy()
+        ax1.imshow(img_np)
+        ax1.set_title("Input Image (denormalized)")
+        # ---- 修正ここまで ----
+
+        lbl = label[j]  # labelは既にNumPy配列
         ax2.imshow(lbl)
         ax2.set_title("True Label")
         
-        # Convert pred to numpy if it's a tensor
-        if isinstance(pred, torch.Tensor):
-            prd = pred[j].cpu().numpy()
-        else:
-            prd = pred[j]
-        
+        prd = pred[j]   # predもNumPy配列
         ax3.imshow(prd)
         ax3.set_title("Prediction")
         
@@ -71,29 +71,25 @@ def train(cfg, device, model, train_progress_bar, optimizer, criterion, evaluato
 
         # メトリクスの計算
         if output.dim() == 4:  # [B, C, H, W]
-            pred = output.argmax(1)  # クラスごとの最大値のインデックスを取得
+            pred = output.argmax(1)
         elif output.dim() == 3:  # [B, H*W, C]
             pred = output.argmax(2).view(label.shape)
         else:
             raise ValueError(f"Unexpected output shape: {output.shape}")
         
-        # print(f"Pred shape: {pred.shape}, Label shape: {label.shape}")
-        
-        pred = pred.cpu().numpy()  # GPU tensor から numpy array に変換
-        label = label.cpu().numpy()  # GPU tensor から numpy array に変換
-        
-        # print(f"Final pred shape: {pred.shape}, Final label shape: {label.shape}")
+        pred = pred.cpu().numpy()
+        label = label.cpu().numpy()
         
         evaluator.add_batch(pred, label)
         
         loss_meter.update(loss.item(), image.size(0))
         train_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
+        # 25epoch毎に先頭バッチだけ可視化 (例)
         if epoch % 25 == 0 and i == 0:
-            # Ensure image, label, and pred are on CPU and in the correct format
-            vis_image = image.cpu()
-            vis_label = label
-            vis_pred = pred if isinstance(pred, np.ndarray) else pred.cpu()
+            vis_image = image.cpu()      # (B, C, H, W)
+            vis_label = label           # (B, H, W)  numpy
+            vis_pred = pred            # (B, H, W)  numpy
             visualize_results(cfg, epoch, vis_image, vis_label, vis_pred, 'train')
 
     mIoU = evaluator.Mean_Intersection_over_Union()
@@ -115,14 +111,10 @@ def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
             label = label.long()
             output = model(image)
             
-            # print(f"Output shape: {output.shape}, Label shape: {label.shape}")
-            
             loss = criterion(output, label)
             loss_meter.update(loss.item(), image.size(0))
             
             pred = output.argmax(1)
-            
-            # print(f"Pred shape: {pred.shape}, Label shape: {label.shape}")
             
             pred = pred.cpu().numpy()
             label = label.cpu().numpy()
@@ -131,11 +123,11 @@ def val(cfg, device, model, val_progress_bar, criterion, evaluator, epoch):
             
             val_progress_bar.set_postfix({'loss': f'{loss.item():.4f}'})
 
+            # 同様に25epoch毎に先頭バッチだけ可視化 (例)
             if epoch % 25 == 0 and i == 0:
-                # Ensure image, label, and pred are on CPU and in the correct format
                 vis_image = image.cpu()
-                vis_label = label  # Already a NumPy array
-                vis_pred = pred    # Already a NumPy array
+                vis_label = label
+                vis_pred = pred
                 visualize_results(cfg, epoch, vis_image, vis_label, vis_pred, 'val')
                 
     mIoU = evaluator.Mean_Intersection_over_Union()
@@ -151,8 +143,8 @@ def test(cfg, device, model, test_loader, criterion):
     
     test_progress_bar = tqdm.tqdm(test_loader, desc='Testing')
 
-    total_inference_time = 0.0 # 合計推論時間を保存する変数
-    total_samples = 0  # テストデータセットのサンプル数
+    total_inference_time = 0.0
+    total_samples = 0
     
     for sample in test_progress_bar:
         image, label = sample['image'].to(device), sample['label'].to(device)
@@ -162,18 +154,17 @@ def test(cfg, device, model, test_loader, criterion):
         
         label = label.long()
 
-        start_time = time.perf_counter()  # 推論開始時間を記録
-
+        start_time = time.perf_counter()
         with torch.no_grad():
             output = model(image)
+        end_time = time.perf_counter()
 
-        end_time = time.perf_counter()  # 推論終了時間を記録
-        inference_time = end_time - start_time  # 推論時間を計算
-        total_inference_time += inference_time  # 推論時間を合計に追加
-        total_samples += image.size(0)  # テストデータセットのサンプル数を更新
+        inference_time = end_time - start_time
+        total_inference_time += inference_time
+        total_samples += image.size(0)
         
         loss = criterion(output, label)
-        pred = get_pred(output)
+        pred = output.argmax(1)
         
         intersection, union, target = intersectionAndUnionGPU(pred, label, cfg.dataset.n_class, cfg.dataset.ignore_label)
         intersection, union, target = intersection.cpu().numpy(), union.cpu().numpy(), target.cpu().numpy()
@@ -186,7 +177,6 @@ def test(cfg, device, model, test_loader, criterion):
     allAcc = sum(intersection_meter.sum) / (sum(target_meter.sum) + 1e-10)
     
     print(f"Test Results - Accuracy: {allAcc:.4f}, mIoU: {mIoU:.4f}")
-    # 平均推論時間を計算して表示
     average_inference_time = total_inference_time / total_samples if total_samples > 0 else 0
     print(f"Test Inference Time(avg seconds / sample): {average_inference_time:.6f}")
-    return mIoU, allAcc, average_inference_time  # Changed here to return 3 values    return mIoU, allAcc
+    return mIoU, allAcc, average_inference_time

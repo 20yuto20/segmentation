@@ -211,4 +211,3 @@ class DefineAugmentSpace(nn.Module):
             space_dict["TranslateY"] = space_dict["TranslateX"]
 
         return space_dict
-

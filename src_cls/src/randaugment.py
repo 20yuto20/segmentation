@@ -67,6 +67,9 @@ class RandAugment(torch.nn.Module):
         self.num_ops = num_ops
         self.magnitude = magnitude
         self.num_magnitude_bins = num_magnitude_bins
+        # print("==================================================")
+        # print(f"num_magnitude_bins ... {self.num_magnitude_bins}")
+        # print("==================================================")
         self.interpolation = interpolation
         self.fill = fill
         self.weight_type = cfg.augment.ra.weight
