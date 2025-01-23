@@ -8,10 +8,9 @@ def get_aug_name(dir_name):
     if dir_name.startswith('RA1_') and dir_name.endswith('_Randmag'):
         return dir_name.split('_')[1]
     return dir_name
-
 def process_directory(base_dir):
-    results = {'val_mIoU': {}, 'test_mIoU': {}}
-    for seed in ['seed201', '', '']:
+    results = {'val_mIoU': {}, 'test_mIoU': {}, 'test_mIoU_std': {}}  # Added test_mIoU_std
+    for seed in ['seed201', 'seed202', 'seed203']:
         voc_dir = base_dir / seed / 'voc'
         if not voc_dir.exists():
             print(f"Warning: Directory {voc_dir} does not exist. Skipping.")
@@ -51,11 +50,16 @@ def process_directory(base_dir):
     
     for aug_name in list(results['test_mIoU'].keys()):
         if results['test_mIoU'][aug_name]:
-            results['test_mIoU'][aug_name] = np.mean(results['test_mIoU'][aug_name])
+            # Store the original list of values
+            values = results['test_mIoU'][aug_name]
+            print(f"Original test_mIoU values for {aug_name}: {values}")
+            # Calculate mean and std from the original list
+            results['test_mIoU'][aug_name] = np.mean(values)
+            results['test_mIoU_std'][aug_name] = np.std(values)
         else:
             print(f"Warning: No valid test_mIoU data for {aug_name}. Removing from results.")
             del results['test_mIoU'][aug_name]
-    
+            del results['test_mIoU_std'][aug_name]    
     return results
 
 def visualize_val_mIoU(results, output_dir):
@@ -79,30 +83,38 @@ def visualize_test_mIoU(results, output_dir):
         print("No valid test_mIoU data to visualize.")
         return
 
-    df = pd.DataFrame.from_dict(results['test_mIoU'], orient='index', columns=['test_mIoU'])
-    df = df.sort_values('test_mIoU', ascending=False).reset_index()
-    df.columns = ['Augmentation', 'test_mIoU']
-    
-    df['Relative Performance'] = (df['test_mIoU'] - df['test_mIoU'].min()) / (df['test_mIoU'].max() - df['test_mIoU'].min())
+    df = pd.DataFrame({
+        'test_mIoU': results['test_mIoU'],
+        'test_mIoU_std': results['test_mIoU_std']
+    }).reset_index()
+    df.columns = ['Augmentation', 'test_mIoU', 'test_mIoU_std']
+    df = df.sort_values('test_mIoU', ascending=False)
+    print(df)
     
     plt.figure(figsize=(14, 8))
-    bars = plt.bar(df['Augmentation'], df['Relative Performance'])
-    plt.title('Relative Average Test mIoU Performance')
+    bars = plt.bar(df['Augmentation'], df['test_mIoU'], 
+                  yerr=df['test_mIoU_std'], 
+                  capsize=5)
+    
+    plt.title('Average Test mIoU Performance')
     plt.xlabel('Augmentation')
-    plt.ylabel('Relative Performance')
+    plt.ylabel('Test mIoU')
     plt.xticks(rotation=90)
+    plt.ylim(0.65, 1.0)
     
     for i, bar in enumerate(bars):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height(), 
-                 f'{df["test_mIoU"].iloc[i]:.4f}', 
-                 ha='center', va='bottom', rotation=90)
+        plt.text(bar.get_x() + bar.get_width()/2, 
+                bar.get_height() + df['test_mIoU_std'].iloc[i] + 0.01,
+                f'{df["test_mIoU"].iloc[i]:.4f}±{df["test_mIoU_std"].iloc[i]:.4f}', 
+                ha='center', va='bottom', rotation=90)
     
     plt.tight_layout()
-    plt.savefig(output_dir / 'test_mIoU_relative_performance.png')
+    plt.savefig(output_dir / 'test_mIoU_performance.png')
     plt.close()
     
     # Save rankings to CSV
     df.to_csv(output_dir / 'test_mIoU_rankings.csv', index=False)
+
 
 def main():
     current_dir = Path(os.path.dirname(os.path.abspath(__file__)))
