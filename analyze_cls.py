@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 # Times New Roman に設定し、フォントサイズや図のサイズを論文向けに調整
 mpl.rcParams['font.family'] = 'DejaVu Serif'
 # mpl.rcParams['mathtext.fontset'] = 'cm'
-mpl.rcParams['font.size'] = 12
+mpl.rcParams['font.size'] = 15
 mpl.rcParams['axes.labelsize'] = 18
 mpl.rcParams['axes.titlesize'] = 20
 mpl.rcParams['legend.fontsize'] = 11
@@ -126,32 +126,34 @@ def visualize_test_mAP(results, output_dir):
         'test_mAP': test_mAP_means,
         'test_mAP_std': test_mAP_stds
     })
-    df = df.sort_values('test_mAP', ascending=False).reset_index(drop=True)
+    df = df.sort_values('test_mAP', ascending=True).reset_index(drop=True)  # Changed to True for bottom-to-top ordering
 
     plt.figure()
-    bars = plt.bar(df['Augmentation'], df['test_mAP'],
-                   yerr=df['test_mAP_std'],
-                   capsize=5)
-    plt.ylim(0.75, 1.0)
-    plt.xlabel('Augmentation')
-    plt.ylabel('Test mAP')
-    plt.xticks(rotation=90)
+    bars = plt.barh(df['Augmentation'], df['test_mAP'],  # Changed to barh
+                    xerr=df['test_mAP_std'],  # Changed to xerr
+                    capsize=5)
+    plt.xlim(0.75, 1.0)  # Changed to xlim
+    plt.ylabel('Augmentation')  # Swapped xlabel and ylabel
+    plt.xlabel('Test mAP')
+    
+    # No need for rotation in y-axis labels
+    plt.yticks(rotation=0)
 
     for i, bar in enumerate(bars):
         plt.text(
-            bar.get_x() + bar.get_width()/2,
-            bar.get_height() + df["test_mAP_std"].iloc[i] + 0.001,
+            bar.get_width() + df["test_mAP_std"].iloc[i] + 0.01,  # Changed x position
+            bar.get_y() + bar.get_height()/2,  # Changed y position
             f'{df["test_mAP"].iloc[i]:.4f}±{df["test_mAP_std"].iloc[i]:.4f}',
-            ha='center',
-            va='bottom',
-            rotation=90
+            ha='left',  # Changed to left alignment
+            va='center',  # Changed to center alignment
+            rotation=0  # Remove rotation
         )
     
     plt.tight_layout()
     plt.savefig(output_dir / 'test_mAP_comparison.pdf', bbox_inches='tight')
     plt.close()
 
-    df.to_csv(output_dir / 'test_mAP_rankings.csv', index=False)
+    df.to_csv(output_dir / 'test_mAP_rankings.csv', index=False)    
 def main():
     current_dir = Path(os.path.dirname(os.path.abspath(__file__)))
     base_dir = current_dir / 'output_cls'

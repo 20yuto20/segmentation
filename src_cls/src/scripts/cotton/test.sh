@@ -13,16 +13,16 @@ echo "ok"
 
 cd $WORKDIR
 
-seed=8
+seed=203
 
 # # For voc
 python main.py voc \
     default.seed=$seed \
-    learn.n_epoch=1 \
+    learn.n_epoch=50 \
     learn.batch_size=32 \
     augment.name=["ra"] \
     augment.ra.weight="single" \
-    augment.ra.single="Posterize" \\
+    augment.ra.single="Solarize" \\
     && python notify.py 0 || python notify.py 1
 
 # # For tiny-imagenet

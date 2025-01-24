@@ -1,8 +1,27 @@
 import os
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+
+# Times New Roman に設定し、フォントサイズや図のサイズを論文向けに調整
+mpl.rcParams['font.family'] = 'DejaVu Serif'
+# mpl.rcParams['mathtext.fontset'] = 'cm'
+mpl.rcParams['font.size'] = 12
+mpl.rcParams['axes.labelsize'] = 18
+mpl.rcParams['axes.titlesize'] = 20
+mpl.rcParams['legend.fontsize'] = 11
+mpl.rcParams['xtick.labelsize'] = 11
+mpl.rcParams['ytick.labelsize'] = 11
+mpl.rcParams['figure.titlesize'] = 16
+mpl.rcParams['xtick.direction'] = 'in'
+mpl.rcParams['ytick.direction'] = 'in'
+mpl.rcParams['xtick.major.width'] = 1.5
+mpl.rcParams['ytick.major.width'] = 1.5
+# デフォルト図サイズ (横×縦) を論文向けに少し小さめに
+mpl.rcParams['figure.figsize'] = (9.6, 6)
+
 
 def get_aug_name(dir_name):
     if dir_name.startswith('RA1_') and dir_name.endswith('_Randmag'):
@@ -88,28 +107,32 @@ def visualize_test_mIoU(results, output_dir):
         'test_mIoU_std': results['test_mIoU_std']
     }).reset_index()
     df.columns = ['Augmentation', 'test_mIoU', 'test_mIoU_std']
-    df = df.sort_values('test_mIoU', ascending=False)
+    df = df.sort_values('test_mIoU', ascending=True)  # Changed to True for bottom-to-top ordering
     print(df)
     
     plt.figure(figsize=(14, 8))
-    bars = plt.bar(df['Augmentation'], df['test_mIoU'], 
-                  yerr=df['test_mIoU_std'], 
-                  capsize=5)
+    bars = plt.barh(df['Augmentation'], df['test_mIoU'],  # Changed to barh
+                   xerr=df['test_mIoU_std'],  # Changed to xerr
+                   capsize=5)
     
-    plt.title('Average Test mIoU Performance')
-    plt.xlabel('Augmentation')
-    plt.ylabel('Test mIoU')
-    plt.xticks(rotation=90)
-    plt.ylim(0.65, 1.0)
+    # plt.title('Average Test mIoU Performance')
+    plt.ylabel('Augmentation')  # Swapped xlabel and ylabel
+    plt.xlabel('Test mIoU')
+    plt.yticks(rotation=0)  # No rotation needed for y-axis labels
+    plt.xlim(0.65, 1.0)  # Changed to xlim
     
     for i, bar in enumerate(bars):
-        plt.text(bar.get_x() + bar.get_width()/2, 
-                bar.get_height() + df['test_mIoU_std'].iloc[i] + 0.01,
-                f'{df["test_mIoU"].iloc[i]:.4f}±{df["test_mIoU_std"].iloc[i]:.4f}', 
-                ha='center', va='bottom', rotation=90)
+        plt.text(
+            bar.get_width() + df['test_mIoU_std'].iloc[i] + 0.01,  # Changed x position
+            bar.get_y() + bar.get_height()/2,  # Changed y position
+            f'{df["test_mIoU"].iloc[i]:.4f}±{df["test_mIoU_std"].iloc[i]:.4f}',
+            ha='left',  # Changed to left alignment
+            va='center',  # Changed to center alignment
+            rotation=0  # No rotation needed
+        )
     
     plt.tight_layout()
-    plt.savefig(output_dir / 'test_mIoU_performance.png')
+    plt.savefig(output_dir / 'test_mIoU_performance.pdf', bbox_inches='tight')
     plt.close()
     
     # Save rankings to CSV
