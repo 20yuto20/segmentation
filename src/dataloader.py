@@ -3,6 +3,7 @@ import os
 import torch
 import random
 import matplotlib.pyplot as plt
+import torchvision.transforms.functional as F
 
 from PIL import Image, ImageOps, ImageFilter
 from torchvision import transforms
@@ -15,6 +16,27 @@ from load_dataset.city import MYDataset
 from load_dataset.voc import VOCDataset, datapath_list
 # cfg.default.dataset_dir :  (SGE_LOCAL_DIR) + dataset/
 
+from torch.utils.data._utils.collate import default_collate
+
+def custom_collate_fn(batch):
+    # バッチ内の画像の形状を確認
+    for item in batch:
+        print(f"Image shape: {item['image'].shape}")
+        print(f"Label shape: {item['label'].shape}")
+    
+    max_h = max([item['image'].shape[1] for item in batch])
+    max_w = max([item['image'].shape[2] for item in batch])
+    
+    for item in batch:
+        if item['image'].shape[1] != max_h or item['image'].shape[2] != max_w:
+            # ラベルが2次元の場合、3次元に変換
+            if len(item['label'].shape) == 2:
+                item['label'] = item['label'].unsqueeze(0)
+            
+            item['image'] = F.resize(item['image'], [max_h, max_w], interpolation=F.InterpolationMode.BILINEAR)
+            item['label'] = F.resize(item['label'], [max_h, max_w], interpolation=F.InterpolationMode.NEAREST)
+    
+    return default_collate(batch)
 
 def get_dataloader(cfg):
     train_transform = get_composed_transform(cfg, "train")
@@ -64,7 +86,8 @@ def get_dataloader(cfg):
         batch_size=cfg.learn.batch_size, 
         num_workers=cfg.default.num_workers, 
         shuffle=True,
-        pin_memory=True
+        pin_memory=True,
+        collate_fn=custom_collate_fn
     )
 
     val_loader = DataLoader(
@@ -72,7 +95,8 @@ def get_dataloader(cfg):
         batch_size=cfg.learn.batch_size, 
         num_workers=cfg.default.num_workers, 
         shuffle=False,
-        pin_memory=True
+        pin_memory=True,
+        collate_fn=custom_collate_fn
     )
 
     test_loader = DataLoader(
@@ -117,13 +141,6 @@ def get_composed_transform(cfg, phase):
                         p=0.5  # 50%の確率で適用
                     )
                 )
-                # 50%
-                # transform_list.append(
-                #     lambda x: {
-                #         'image': x['image'].flip(-1) if random.random() < 0.5 else x['image'],
-                #         'label': x['label'].flip(-1) if x['image'].flip(-1).equal(x['image']) else x['label']
-                #     }
-                # )
             elif aug_name == "cutout":
                 transform_list.append(
                     transforms.RandomApply(
@@ -136,6 +153,40 @@ def get_composed_transform(cfg, phase):
                 transform_list.append(RandAugmentSegmentation(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude))
             elif aug_name == "nan":
                 pass
+            # GaussianBlurの追加
+            elif aug_name == "gaussian_blur":
+                transform_list.append(
+                    transforms.RandomApply(
+                        [lambda x: {
+                            'image': F.gaussian_blur(x['image'], kernel_size=random.choice([3, 5, 7])),
+                            'label': x['label']  # ラベルには適用しない
+                        }],
+                        p=0.5  # 50%の確率で適用
+                    )
+                )
+            
+            # RandomResizeの追加
+            elif aug_name == "random_resize":
+                transform_list.append(
+                    lambda x: {
+                        'image': F.resize(
+                            x['image'],
+                            size=[
+                                int(x['image'].size[0] * random.uniform(0.5, 2.0)),
+                                int(x['image'].size[1] * random.uniform(0.5, 2.0))
+                            ],
+                            interpolation=F.InterpolationMode.BILINEAR
+                        ),
+                        'label': F.resize(
+                            x['label'],
+                            size=[
+                                int(x['label'].size[0] * random.uniform(0.5, 2.0)),
+                                int(x['label'].size[1] * random.uniform(0.5, 2.0))
+                            ],
+                            interpolation=F.InterpolationMode.NEAREST
+                        )
+                    }
+                )
             else:
                 raise ValueError(f"Invalid Augment ... {aug_name}")
     

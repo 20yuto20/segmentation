@@ -13,13 +13,13 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=203
+seed=8
 python main.py voc \
     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc_aug/" \
     default.seed=$seed \
-    learn.n_epoch=50 \
-    learn.batch_size=8 \
-    augment.name=["ra"] \
-    augment.ra.weight="single" \
-    augment.ra.single="Cutout" \
+    learn.n_epoch=1 \
+    learn.batch_size=16 \
+    augment.name=["ra, hflip, gaussian_blur, random_resize"] \
+    augment.ra.weight="random" \
+    augment.ra.single="Rotate" \
     && python notify.py 0 || python notify.py 1

@@ -3,6 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import random
 
 from PIL import ImageOps, Image
 import torch
@@ -152,8 +153,10 @@ def _apply_op(
             fill=255,
         )
     elif op_name == "Rotate":
-        img = F.rotate(img, magnitude, interpolation=interpolation, fill=fill)
-        label = F.rotate(label, magnitude, interpolation=F.InterpolationMode.NEAREST, fill=255)
+        # FIXME:この確率は検証のために暫定的に設定したものであり、検証が終了次第削除
+        if random.random() < 0.5:
+            img = F.rotate(img, magnitude, interpolation=interpolation, fill=fill)
+            label = F.rotate(label, magnitude, interpolation=F.InterpolationMode.NEAREST, fill=255)
     elif op_name == "Brightness":
         # magnitude = 2.0
         img = F.adjust_brightness(img, 1.0 + magnitude)
@@ -269,7 +272,7 @@ class DefineAugmentSpace(nn.Module):
             "ShearY": (torch.linspace(0.0, 0.3, num_bins), True),
             "TranslateX": (torch.linspace(0.0, 148.0, num_bins), True),
             "TranslateY": (torch.linspace(0.0, 148.0, num_bins), True),
-            "Rotate": (torch.linspace(0.0, 30.0, num_bins), True),
+            "Rotate": (torch.linspace(-10.0, 10.0, num_bins), True),
             "Brightness": (torch.linspace(0.1, 0.9, num_bins), True),
             "Color": (torch.linspace(0.1, 1.9, num_bins), True),
             "Contrast": (torch.linspace(0.1, 0.9, num_bins), True),
@@ -282,8 +285,6 @@ class DefineAugmentSpace(nn.Module):
             "Cutout_img": (torch.linspace(0.0, 0.5, num_bins), False),
             "SolarizeAdd": (torch.linspace(0, 110.0, num_bins), False),
             "Invert": (torch.tensor([0.0]), False),
-            "Hflip":(torch.tensor([0.0]), False),
-            "Vflip":(torch.tensor([0.0]), False)
         }
         if image_size[0] > 100:
             space_dict["TranslateX"] = (torch.linspace(0.0, 148.0, num_bins), True)
