@@ -19,49 +19,104 @@ from load_dataset.voc import VOCDataset, datapath_list
 from torch.utils.data._utils.collate import default_collate
 
 def custom_collate_fn(batch):
-    # バッチ内の画像の形状を確認
-    for item in batch:
-        print(f"Image shape: {item['image'].shape}")
-        print(f"Label shape: {item['label'].shape}")
+    # バッチ内の画像形状を確認（デバッグ用）
+    # for item in batch:
+    #     print(f"Image shape: {item['image'].shape}")
+    #     print(f"Label shape: {item['label'].shape}")
     
     max_h = max([item['image'].shape[1] for item in batch])
     max_w = max([item['image'].shape[2] for item in batch])
     
     for item in batch:
+        # labelが2次元の場合 → 3次元 [1, H, W] に変換
+        if len(item['label'].shape) == 2:
+            item['label'] = item['label'].unsqueeze(0)
+        # labelが1次元の場合 → [1, 1, W] に変換
+        elif len(item['label'].shape) == 1:
+            item['label'] = item['label'].unsqueeze(0).unsqueeze(0)
+        
+        # 画像・ラベルをバッチ内最大サイズに合わせてリサイズ
         if item['image'].shape[1] != max_h or item['image'].shape[2] != max_w:
-            # ラベルが2次元の場合、3次元に変換
-            if len(item['label'].shape) == 2:
-                item['label'] = item['label'].unsqueeze(0)
-            
             item['image'] = F.resize(item['image'], [max_h, max_w], interpolation=F.InterpolationMode.BILINEAR)
             item['label'] = F.resize(item['label'], [max_h, max_w], interpolation=F.InterpolationMode.NEAREST)
     
     return default_collate(batch)
+
+class RandomScaleCrop(object):
+    """
+    画像とラベルを [scale_min, scale_max] の範囲でランダムスケールし、
+    必要に応じてパディングしてから最終的に crop_size × crop_size に切り抜く。
+    """
+    def __init__(self, scale_min=0.5, scale_max=2.0, crop_size=473, ignore_label=255):
+        """
+        Args:
+            scale_min (float): 拡大縮小の最小倍率
+            scale_max (float): 拡大縮小の最大倍率
+            crop_size (int): 最後に切り抜くサイズ (crop_size, crop_size)
+            ignore_label (int): ラベルの無効値
+        """
+        self.scale_min = scale_min
+        self.scale_max = scale_max
+        self.crop_size = crop_size
+        self.ignore_label = ignore_label
+
+    def __call__(self, sample):
+        """
+        Args:
+            sample (dict): {'image': PIL or Tensor, 'label': PIL or Tensor}
+        Returns:
+            dict: {'image': PIL.Image, 'label': PIL.Image}
+                  ※最終的に (crop_size, crop_size) に整形
+        """
+        img, label = sample['image'], sample['label']
+
+        # 1) ランダムなスケール係数をサンプリング
+        scale = random.uniform(self.scale_min, self.scale_max)
+
+        # 画像の現在サイズを取得
+        w, h = img.size  # (width, height)
+        # 新しいサイズ
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+
+        # 2) 画像とラベルをリサイズ
+        # (画像にはバイリニア補間、ラベルにはニアレスト補間)
+        img = F.resize(img, (new_h, new_w), interpolation=F.InterpolationMode.BILINEAR)
+        label = F.resize(label, (new_h, new_w), interpolation=F.InterpolationMode.NEAREST)
+
+        # 3) 必要に応じてパディング（スケール後に crop_size 以下になった部分をカバーする）
+        pad_bottom = max(0, self.crop_size - new_h)
+        pad_right  = max(0, self.crop_size - new_w)
+
+        if pad_bottom > 0 or pad_right > 0:
+            # 画像のパディング (RGBは0埋め)
+            img = F.pad(img, (0, 0, pad_right, pad_bottom), fill=0)
+            # ラベルは ignore_label で埋める
+            label = F.pad(label, (0, 0, pad_right, pad_bottom), fill=self.ignore_label)
+
+        # パディング後のサイズを更新
+        w_padded, h_padded = img.size
+
+        # 4) ランダムに crop_size × crop_size を切り抜き
+        #    (切り抜き可能範囲を乱数で指定)
+        x1 = random.randint(0, w_padded - self.crop_size)
+        y1 = random.randint(0, h_padded - self.crop_size)
+
+        img = F.crop(img, y1, x1, self.crop_size, self.crop_size)
+        label = F.crop(label, y1, x1, self.crop_size, self.crop_size)
+
+        return {'image': img, 'label': label}
+
 
 def get_dataloader(cfg):
     train_transform = get_composed_transform(cfg, "train")
     val_transform = get_composed_transform(cfg, "val")
     test_transform = get_composed_transform(cfg, "test")
 
-    # train_dataset = MYDataset(dataset_path, split='train', transform=train_transform)
-    # val_dataset = MYDataset(dataset_path, split='val', transform=val_transform)
-    # test_dataset = MYDataset(dataset_path, split='test', transform=test_transform)
-
-    # データセット作成
-
     if cfg.dataset.name == "voc":
-        # path_2012 = "/homes/ypark/code/dataset/VOCdevkit/VOC2012/"
-        # path_2007 = "/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc/VOCdevkit/VOC2007"
-
-        # abciで回すために少し変えました．
-        # path_2012 = cfg.default.dataset_dir + "VOCSBD/"
-        # path_2007 = cfg.default.dataset_dir + "VOC2007/VOCdevkit/VOC2007/"
-        
         path_train = cfg.default.dataset_dir + "train_aug/"
         path_val = cfg.default.dataset_dir + "val/"
-        # path_test = cfg.default.dataset_dir + "test/"
         path_test = cfg.default.dataset_dir + "test_2007/"
-
 
         print(f"load train from : {path_train} \n load validation from : {path_val} \n load test from : {path_test}")
 
@@ -69,13 +124,18 @@ def get_dataloader(cfg):
             path_train=path_train,
             path_val=path_val,
             path_test=path_test
-            )
+        )
         
-        
-        train_dataset = VOCDataset(train_img_list, train_anno_list, phase="train", transform=train_transform, img_size=cfg.dataset.resized_size)
-        val_dataset = VOCDataset(val_img_list, val_anno_list, phase="val", transform=val_transform, img_size=cfg.dataset.resized_size)
-        ##### 追記をお願いします ############
-        test_dataset = VOCDataset(test_img_list, test_anno_list, phase="test", transform=test_transform, img_size=cfg.dataset.resized_size)
+        train_dataset = VOCDataset(train_img_list, train_anno_list, phase="train",
+                                   transform=train_transform, img_size=cfg.dataset.resized_size)
+        val_dataset = VOCDataset(val_img_list, val_anno_list, phase="val",
+                                 transform=val_transform, img_size=cfg.dataset.resized_size)
+        test_dataset = VOCDataset(test_img_list, test_anno_list, phase="test",
+                                  transform=test_transform, img_size=cfg.dataset.resized_size)
+
+    else:
+        # もし別のデータセットを使うならここに追記
+        raise ValueError(f"Unsupported dataset name: {cfg.dataset.name}")
 
     print(f"train dataset len : {len(train_dataset)}")
     print(f"val dataset len : {len(val_dataset)}")
@@ -111,15 +171,27 @@ def get_dataloader(cfg):
 
     return train_loader, val_loader, test_loader
 
+
 def get_composed_transform(cfg, phase):
     transform_list = []
 
     if phase == "train":
         for aug_name in cfg.augment.name:
+            # if aug_name == "rcrop":
+            #     transform_list.append(
+            #         RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad)
+            #     )
             if aug_name == "rcrop":
+                # 例：0.5～2.0倍にランダムスケールし、最後に crop_size=cfg.dataset.resized_size で切り抜き
                 transform_list.append(
-                    RandomCrop(size=cfg.dataset.resized_size, padding=cfg.augment.hp.rcrop_pad)
+                    RandomScaleCrop(
+                        scale_min=0.5,
+                        scale_max=2.0,
+                        crop_size=cfg.dataset.resized_size,
+                        ignore_label=(cfg.dataset.ignore_label if "ignore_label" in cfg.dataset else 255)
+                       )
                 )
+
             elif  aug_name == "hflip":
                 transform_list.append(
                     transforms.RandomApply(
@@ -127,10 +199,9 @@ def get_composed_transform(cfg, phase):
                             'image': ImageOps.mirror(x['image']),
                             'label': ImageOps.mirror(x['label'])
                         }],
-                        p=0.5  # 50%の確率で適用
+                        p=0.5
                     )
                 )
-            
             elif aug_name == "vflip":
                 transform_list.append(
                     transforms.RandomApply(
@@ -138,34 +209,35 @@ def get_composed_transform(cfg, phase):
                             'image': ImageOps.flip(x['image']),
                             'label': ImageOps.flip(x['label'])
                         }],
-                        p=0.5  # 50%の確率で適用
+                        p=0.5
                     )
                 )
             elif aug_name == "cutout":
                 transform_list.append(
                     transforms.RandomApply(
-                        [lambda x: {'image': Cutout(n_holes=1, img_size=cfg.dataset.resized_size, patch_size=cfg.augment.hp.cutout_size)(x['image']),
-                                    'label': x['label']}],
+                        [lambda x: {
+                            'image': Cutout(n_holes=1, img_size=cfg.dataset.resized_size,
+                                            patch_size=cfg.augment.hp.cutout_size)(x['image']),
+                            'label': x['label']
+                        }],
                         p=cfg.augment.hp.cutout_p
                     )
                 )
             elif aug_name == "ra":
-                transform_list.append(RandAugmentSegmentation(cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude))
+                transform_list.append(RandAugmentSegmentation(
+                    cfg=cfg, num_ops=cfg.augment.ra.num_op, magnitude=cfg.augment.ra.magnitude))
             elif aug_name == "nan":
                 pass
-            # GaussianBlurの追加
             elif aug_name == "gaussian_blur":
                 transform_list.append(
                     transforms.RandomApply(
                         [lambda x: {
                             'image': F.gaussian_blur(x['image'], kernel_size=random.choice([3, 5, 7])),
-                            'label': x['label']  # ラベルには適用しない
+                            'label': x['label']
                         }],
-                        p=0.5  # 50%の確率で適用
+                        p=0.5
                     )
                 )
-            
-            # RandomResizeの追加
             elif aug_name == "random_resize":
                 transform_list.append(
                     lambda x: {
@@ -189,9 +261,13 @@ def get_composed_transform(cfg, phase):
                 )
             else:
                 raise ValueError(f"Invalid Augment ... {aug_name}")
-    
+
+    # 学習時以外の共通・または学習/推論共通処理などここへ
+
+    # 最後に正規化
     if cfg.dataset.name == "voc":
-        transform_list.append(Normalize_Tensor(color_mean=cfg.dataset.mean, color_std=cfg.dataset.std))
+        transform_list.append(Normalize_Tensor(
+            color_mean=cfg.dataset.mean, color_std=cfg.dataset.std))
     else:
         transform_list.append(ToTensor())
         transform_list.append(Normalize(mean=cfg.dataset.mean, std=cfg.dataset.std))
@@ -199,6 +275,7 @@ def get_composed_transform(cfg, phase):
     transform_list = transforms.Compose(transform_list)
 
     return transform_list
+
 
 def get_voc_colormap():
     colormap = np.zeros((256, 3), dtype=int)
@@ -208,6 +285,7 @@ def get_voc_colormap():
         for channel in range(3):
             colormap[:, channel] |= ((ind >> channel) & 1) << shift
     return colormap
+
 
 def visualize_label(label, colormap):
     r = label.copy()
@@ -220,7 +298,12 @@ def visualize_label(label, colormap):
     rgb = np.stack([r, g, b], axis=2)
     return rgb
 
+
 def visualize_augmentations(cfg, train_dataset):
+    import os
+    import random
+    import torch
+    import matplotlib.pyplot as plt
     output_dir = os.path.join(cfg.out_dir, "aug_samples")
     os.makedirs(output_dir, exist_ok=True)
 
