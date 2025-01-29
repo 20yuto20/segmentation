@@ -13,11 +13,11 @@ echo "ok"
 
 cd $WORKDIR/src
 
-seed=2
+seed=201
 python main.py voc \
     default.dataset_dir="/homes/ykohata/code/devml/homes/ypark/code/seg/dataset/voc_aug/" \
     default.seed=$seed \
-    learn.n_epoch=10 \
+    learn.n_epoch=50 \
     learn.batch_size=8 \
     augment.name=["ra, hflip, gaussian_blur, rcrop"] \
     augment.ra.weight="random" \
